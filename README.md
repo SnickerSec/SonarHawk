@@ -3,9 +3,7 @@
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=soprasteria_sonar-report&metric=alert_status)](https://sonarcloud.io/dashboard?id=soprasteria_sonar-report)
 [![Build Status](https://travis-ci.org/soprasteria/sonar-report.svg?branch=master)](https://github.com/soprasteria/sonar-report)
 
-![tomcat screenshot example](screenshots/tomcat1.png "tomcat screenshot example")
-
-![tomcat screenshot example](screenshots/tomcat2.png "tomcat screenshot example")
+![alt text](image-1.png)
 
 ## Install
 
