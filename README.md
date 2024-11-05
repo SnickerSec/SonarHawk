@@ -1,40 +1,47 @@
-# sonar-report
+# SonarFlex
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=soprasteria_sonar-report&metric=alert_status)](https://sonarcloud.io/dashboard?id=soprasteria_sonar-report)
-[![Build Status](https://travis-ci.org/soprasteria/sonar-report.svg?branch=master)](https://github.com/soprasteria/sonar-report)
+![Project Overview](image-1.png)
 
-![alt text](image-1.png)
+## Overview
 
-## Install
+**SonarFlex** generates detailed vulnerability reports from a SonarQube instance. With customizable options and support for different SonarQube versions, SonarFlex helps teams stay on top of security issues and code quality.
 
-Compatible with node 14+
+## Installation
+
+- **Requirements**: Node.js v14+
+  
+To install globally, run:
 
 ```bash
-$ npm install -g sonar-report
+npm install -g sonar-report
 ```
 
-## Use
+## Usage
 
-- See all options with:
+SonarFlex can generate reports with various configurations. To view all available options, run:
 
 ```bash
-$ sonar-report -h
+sonar-report -h
+```
+
+This will display:
+
+```plaintext
 Usage: sonar-report [options]
 
 Generate a vulnerability report from a SonarQube instance.
 ```
 
-- Environment:
+### Environment Variables
 
-  - http_proxy : the proxy to use to reach the sonarqube instance (`http://<host>:<port>`)
-  - NODE_EXTRA_CA_CERTS
-    - the custom certificate authority to trust (troubleshoots `Unable to verify the first certificate`)
-    - the variable holds a file name that contains the certificate in pem format (root CA or full trust chain)
+- **http_proxy**: Proxy to connect to SonarQube (`http://<host>:<port>`)
+- **NODE_EXTRA_CA_CERTS**: Custom certificate authority file for SSL verification (PEM format)
 
-- Example:
+### Example Command
+
+Generate a report:
 
 ```bash
-# Generate report example
 sonar-report \
   --sonarurl="https://sonarcloud.io" \
   --sonarcomponent="soprasteria_sonar-report" \
@@ -44,131 +51,154 @@ sonar-report \
   --release="1.0.0" \
   --branch="master" \
   --output="samples/sonar-report_sonar-report.html"
+```
 
-# Open in browser
+To open the report in your browser:
+
+```bash
 xdg-open samples/sonar-report_sonar-report.html
 ```
 
-## Migrate to v3
+## Migrating to v3
 
-- Compared the flags, most of them switched from snake-case to keba-case
-- there is a new flag to ouput the report in a specific folder `--output`, it allows to generate a summary report that can be viewed in the CI:
+### Key Changes
 
-  ```txt
-  Report Generated On Wed Aug 24 2022
+- **Flag Changes**: Most flags now use kebab-case.
+- **Output Folder**: Use the `--output` flag to specify a folder for the generated report. This enables viewing summaries directly in CI pipelines.
 
-  Project Name: Sonar Report
-  Application: sonar-report
-  Release: 1.0.0
-  Delta analysis: No
+Example summary format:
 
-  Summary of the Detected Vulnerabilities
+```plaintext
+Report Generated On Wed Aug 24 2022
 
-  Severity: HIGH
-  Number of Issues: 0
+Project Name: Sonar Report
+Application: sonar-report
+Release: 1.0.0
+Delta analysis: No
 
-  Severity: MEDIUM
-  Number of Issues: 0
+Summary of the Detected Vulnerabilities
 
-  Severity: LOW
-  Number of Issues: 0
-  ```
+Severity: HIGH
+Number of Issues: 0
 
-## Some parameters explained
+Severity: MEDIUM
+Number of Issues: 0
 
-### --since-leak-period
+Severity: LOW
+Number of Issues: 0
+```
 
-The `--since-leak-period` parameter activates delta analysis. If `true`, sonar-report will only get the vulnerabilities that were added since a fixed date/version or for a number of days. For this it will:
+## Key Parameters
 
-- get `sonar.leak.period` value using sonar settings API.
-- filter accordingly when getting the issues using the issues API.
+### `--since-leak-period`
 
-When sinceleakperiod is activated, the report will include an additional `Reference period` field that holds the leak period configured in SonarQube.
+Enables delta analysis. If set to `true`, only vulnerabilities added since a specific date/version or within a set number of days are shown.
 
-More info:
+This option:
 
-- [Sonar documentation](https://docs.sonarqube.org/latest/user-guide/fixing-the-water-leak/ "leak period")
-- In sonarQube, /settings : see leak period
+1. Retrieves `sonar.leak.period` from SonarQube settings.
+2. Filters issues by this period.
 
-### --allbugs
+More information on [SonarQube’s leak period](https://docs.sonarqube.org/latest/user-guide/fixing-the-water-leak/).
 
-- "false": only vulnerabilities are exported
-- "true": all bugs are exported
+### `--allbugs`
 
-### --fix-missing-rule
+- **"false"**: Only vulnerabilities are included.
+- **"true"**: Includes all bugs.
 
-On some versions of sonar (found on 6.5), the `type` of issue and the `type` of the rule don't match (for example `VULNERABILITY` vs `CODE_SMELL` ).
+### `--fix-missing-rule`
 
-In this case, when `allbugs=false`, it's possible that the issue is extracted but not it's rule. What will happen is that the issue has `/` in the description (because the description is the name of the rule).
+Handles discrepancies in issue types (`VULNERABILITY` vs `CODE_SMELL`) across different SonarQube versions.
 
-To circumvent this issue, the fixMissingRule will extract all rules without any filter on the `type`.
+Activating this parameter:
 
-Beware that, with this parameter activated, all the issues linked to the rules displayed may not be displayed.
+- Ensures rules are extracted even when types don’t align.
+- May result in additional issues being included.
 
-### --no-security-hotspot
+### `--no-security-hotspot`
 
-Sonar-report will try to find how your sonarqube instance is working with hotspots depending on the running version. However in last resort, you can use the `--no-security-hotspot` flag in order to deactivate the hotspots processing.
+Disables hotspot processing, which varies by SonarQube version. Use this option if your instance doesn’t fully support hotspots.
 
-**Note that you may miss out on some vulnerabilities when using this option if your sonarqube instance does support hotspots.**
+#### Hotspot Support by SonarQube Version:
 
-General information about security hotspots: https://docs.sonarqube.org/latest/user-guide/security-hotspots/
+- **< 7.3**: No support for hotspots.
+- **7.3 - 7.8**: Hotspots stored in `/issues` endpoint; some statuses unavailable.
+- **7.8 - 8.2**: Hotspots fully supported in `/issues`.
+- **>= 8.2**: Hotspots moved to `/hotspots` endpoint.
 
-Here's a brief history of sonarqube dealing with hotspots.
+To check your instance’s behavior:
 
-- version < 7.3
-  - hotspots don't exist
-- 7.3 <= version < 7.8:
-  - hotspots are stored in the /issues endpoint
-  - issue status doesn't include TO_REVIEW, IN_REVIEW yet
-  - issues type includes SECURITY_HOTSPOT
-  - rules type includes SECURITY_HOTSPOT for now on
-- 7.8 <= version < 8.2
-  - hotspots are stored in the /issues endpoint
-  - issue status includes TO_REVIEW, IN_REVIEW
-  - issues type includes SECURITY_HOTSPOT
-- version >= 8.2
-  - hotspots are in a dedicated endpoint /hotspots
-  - issues status don't include anymore TO_REVIEW, IN_REVIEW
-  - issues type don't include anymore SECURITY_HOTSPOT
+- View `api/system/status` for version info.
+- Check `/web_api/api/issues/search` and `/web_api/api/rules/search` for parameter options.
 
-A few notes:
+## Development
 
-- this behavior was verified using the embedded web_api documentation from dockerhub community distributions
-- Versions 7.2 and 7.3 couldn't be verified as they are not present on dockerhub (and sonarqube doesn't seem to be publishing the API documentation per version)
-- some implementations may not work as expected: for example sonarcloud v8.0 doesn't know about hotspots. When using sonarcloud v8.0 please use the `--no-security-hotspot` flag
-
-To verify how your instance deals with hotspots, check:
-
-- ${sonarBaseURL}/api/system/status
-- ${sonarBaseURL}/web_api/api/issues/search (check Possible values of parameters `statuses`, `types`)
-- ${sonarBaseURL}/web_api/api/rules/search (check Possible values of parameter `types`)
-- ${sonarBaseURL}/web_api/api/hotspots
-
-## Develop
-
-Get the dependencies:
+To set up for development, install dependencies:
 
 ```bash
 npm install
 ```
 
-Run with the same command as [Use](#use) but use `node cli.js` instead of `sonar-report`
+Then, run commands like in the [Usage](#usage) section but replace `sonar-report` with `node cli.js`.
 
 ## Troubleshooting
 
-- The description is "/"
+### Common Issues
 
-Set `--fix-missing-rule` to true
+- **Missing Rule Descriptions**: Use `--fix-missing-rule` to fetch all rules.
+- **400 Bad Request for Hotspot Types**: If your SonarQube instance doesn’t support hotspots, use `--no-security-hotspot`.
+- **Too Many Results**: SonarQube limits results to 10,000. Use filters or remove `--allbugs` if needed.
 
-- Error `Value of parameter 'types' (SECURITY_HOTSPOT) must be one of: [CODE_SMELL, BUG, VULNERABILITY]"}]}`
-- or: `Error while getting issues :  - Response code 400 (Bad Request) - 400 - Bad Request - {"errors":[{"msg":"Value of parameter \u0027statuses\u0027 (TO_REVIEW) must be one of: [OPEN, CONFIRMED, REOPENED, RESOLVED, CLOSED]"}]}`
+## Additional Notes
 
-Your version of sonarQube doesn't support security hotspots. Set `--no-security-hotspot` to true. (more info check [--no-security-hotspot](#no-security-hotspot) description above)
+Refer to SonarQube’s documentation and your instance’s API documentation for details on available settings:
 
-- `{"errors":[{"msg":"Can return only the first 10000 results. 10500th result asked."}]}`
+- **Status**: `${sonarBaseURL}/api/system/status`
+- **Issues**: `${sonarBaseURL}/web_api/api/issues/search`
+- **Rules**: `${sonarBaseURL}/web_api/api/rules/search`
+- **Hotspots**: `${sonarBaseURL}/web_api/api/hotspots`
 
-This is a limitation in sonarQube API. There is no way around it to date apart from adding limiting filters
+## Application Improvements Summary:
 
-Try removing `--allbugs` or tune the query in index.js (see /web_api/api/issues under your sonarQube instance)
+1. **Enhanced Report Layout and Design**:
+   - Redesigned the HTML report layout to improve readability and visual appeal.
+   - Introduced a clean, professional look with improved font choices, spacing, and padding, making the report easier to scan.
+   - Used subtle background shading, borders, and rounded corners for sections to make the report visually organized.
 
-See also this discussion <https://community.sonarsource.com/t/cannot-get-more-than-10000-results-through-web-api/3662/4>
+2. **Detailed Sectioned UI for Report Data**:
+   - Structured the report into distinct sections, including the "Summary," "Quality Gate Status," and "Detailed Vulnerabilities" sections, so users can easily locate specific information.
+   - Improved headings with blue underlines to visually separate sections and enhance navigation.
+
+3. **Severity-Based Color Coding**:
+   - Implemented color-coded badges for severity levels (HIGH, MEDIUM, LOW) in both the summary and details sections, helping users quickly identify critical issues.
+   - Used color contrast to make each severity level easily distinguishable and visually prominent.
+
+4. **Overflow and Responsive Table Improvements**:
+   - Adjusted the layout for the "Detailed Vulnerabilities" table to handle overflow issues, ensuring data displays correctly even with long text entries.
+   - Set maximum column widths for specific fields like "Component" and "Message" to prevent overflowing text, while still displaying important information with ellipsis (`...`) where necessary.
+   - Enabled horizontal scrolling for the details section, allowing users to view full data on smaller screens or when the table content exceeds the container width.
+
+5. **Download and Export Options**:
+   - Added an "Export to PDF" feature using `html2pdf.js`, enabling users to save the report as a PDF file for sharing or archiving.
+   - Moved the "Export to PDF" button to the top-right of the "Summary" section for quick access, following UI conventions for document actions.
+   - Positioned the "Print Report" button in a clearly visible area to make it convenient for users to print a hard copy of the report.
+
+6. **Interactive and Accessible Features**:
+   - Added alt text for links and icon descriptions to improve accessibility for users with screen readers.
+   - Improved link styling with color and hover effects, making clickable elements easily identifiable.
+   - Used icons (e.g., 📅, 🔗, 📦) next to data labels for a more engaging and visually appealing experience in the summary section.
+
+7. **Tooltips and Helper Text**:
+   - Added tooltips or helper text where necessary, especially for complex fields and severity levels, to clarify information for users unfamiliar with specific terms or concepts.
+
+8. **Consistent Iconography and Visual Indicators**:
+   - Standardized the use of icons across the application to create a cohesive look and make key information immediately recognizable.
+   - Used status badges for "Quality Gate Status" (e.g., green for OK, red for FAILED) to reinforce the report’s current state at a glance.
+
+9. **Improved Error Handling and Feedback**:
+   - Enhanced error messaging for PDF export or data loading issues, providing users with clearer feedback and troubleshooting suggestions if something goes wrong.
+   - Checked compatibility with various SonarQube versions, ensuring error-free functionality for different configurations and environments.
+
+10. **Code Refactoring and Modularity**:
+    - Refactored CSS styling to make it modular and easier to maintain, especially for shared components like tables, buttons, and badges.
+    - Improved JavaScript modularity by organizing functions, such as PDF export, into reusable code blocks, making future updates and maintenance simpler.
