@@ -1,28 +1,10 @@
-pre,
-td,
-th {
-    padding: 5px 10px
-}
-
-code,
-hr,
-pre,
-thead {
-    background: #EEE
-}
-
+/* General Typography and Colors */
 body {
     color: #333;
     font-family: 'Segoe UI', 'Lucida Grande', Helvetica, sans-serif;
-    line-height: 1.5;
-}
-
-div.summup {
-    max-width: 800px;
-    margin: 50px auto;
-}
-
-div.detail {
+    line-height: 1.6;
+    background-color: #f9f9f9;
+    margin: 0;
     padding: 20px;
 }
 
@@ -32,135 +14,172 @@ h3,
 h4,
 h5,
 h6 {
-    font-weight: 400;
-    line-height: 1em;
-    margin: 20px 0
+    font-weight: 500;
+    margin: 20px 0;
 }
 
 h1 {
-    font-size: 2.25em
+    font-size: 2.5em;
+    color: #333;
 }
 
 h2 {
-    font-size: 1.75em
+    font-size: 1.8em;
+    color: #444;
 }
 
 h3 {
-    font-size: 1.5em
-}
-
-h4,
-h5,
-h6 {
-    font-size: 1.25em
+    font-size: 1.5em;
 }
 
 a {
-    color: #08C;
-    text-decoration: none
+    color: #0088cc;
+    text-decoration: none;
 }
 
-a:focus,
-a:hover {
-    text-decoration: underline
-}
-
-a:visited {
-    color: #058
+a:hover,
+a:focus {
+    text-decoration: underline;
 }
 
 img {
-    max-width: 100%
+    max-width: 100%;
 }
 
-li+li {
-    margin-top: 3px
+/* Container Styling */
+div.summup,
+div.detail {
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-dt {
-    font-weight: 700
-}
-
-code {
-    font-family: Consolas, "Lucida Console", monospace;
-    padding: 1px 5px
-}
-
-pre {
-    white-space: pre-wrap
-}
-
-pre code {
-    padding: 0
-}
-
-blockquote {
-    border-left: 5px solid #EEE;
-    margin: 0;
-    padding: 0 10px
-}
-
+/* Table Styling */
 table {
-    border-collapse: collapse;
-    width: 100%
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 20px;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-table+table {
-    margin-top: 1em
+th,
+td {
+    padding: 10px 15px;
+    border: 1px solid #eaeaea;
 }
 
-thead {
-    text-align: left
-}
-
-td,
 th {
-    border: 1px solid #EEE
+    background-color: #f2f2f2;
+    font-weight: 600;
+    color: #555;
+    text-align: left;
 }
 
-td.component {
-    word-break: break-all;
+thead th {
+    background-color: #f7f7f7;
 }
 
-hr {
-    border: 0;
-    height: 1px
+td {
+    font-size: 0.95em;
 }
 
-.banner {
+tr:nth-child(even) {
+    background-color: #fafafa;
+}
+
+/* Rounded Status and Severity Indicators */
+.statusOK,
+.statusERROR,
+.sevHIGH,
+.sevMEDIUM,
+.sevLOW {
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 5px;
     text-align: center;
-}
-
-canvas {
-    display: block;
-    margin: 10px auto;
+    font-weight: bold;
+    display: inline-block;
 }
 
 .statusOK {
-    background-color: #0a0
+    background-color: #0a0;
 }
 
 .statusERROR {
-    background-color: #d4333f
+    background-color: #d4333f;
 }
 
 .sevHIGH {
-    background-color: #d43223
+    background-color: #d43223;
 }
 
 .sevMEDIUM {
-    background-color: #f39c12
+    background-color: #f39c12;
 }
 
 .sevLOW {
-    background-color: #319ddb
+    background-color: #319ddb;
 }
 
+/* Code and Preformatted Text */
+code,
+pre {
+    background: #f5f5f5;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-family: Consolas, "Lucida Console", monospace;
+}
+
+pre {
+    white-space: pre-wrap;
+    overflow-x: auto;
+}
+
+/* Links and List Styling */
+dt {
+    font-weight: 700;
+}
+
+li+li {
+    margin-top: 5px;
+}
+
+/* Blockquotes */
+blockquote {
+    border-left: 5px solid #e0e0e0;
+    margin: 0;
+    padding: 10px 15px;
+    background-color: #fafafa;
+    font-style: italic;
+    color: #666;
+}
+
+/* Canvas for Charts */
+canvas {
+    display: block;
+    margin: 20px auto;
+    max-width: 100%;
+}
+
+/* Banner Styling */
+.banner {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Additional Utilities */
 .hidden {
     display: none;
 }
 
 .rulestable {
     table-layout: fixed;
-    word-wrap: break-word
+    word-wrap: break-word;
 }

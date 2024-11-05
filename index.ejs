@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SonarQube <%= vulnerabilityPhrase %> Report</title>
     <style>
       /* Enhanced styling for readability and structure */
@@ -12,24 +13,43 @@
         padding: 20px;
         background-color: #f7f7f7;
       }
-      h1,
-      h2,
-      h3 {
+      h1 {
         color: #333;
-        margin: 0;
-        padding-bottom: 10px;
+        font-size: 28px;
+        margin-bottom: 15px;
       }
-      .summup,
-      .detail {
+      h2 {
+        color: #555;
+        font-size: 22px;
+        margin-top: 20px;
+        margin-bottom: 15px;
+        border-bottom: 2px solid #ddd;
+        padding-bottom: 5px;
+      }
+      .container {
+        max-width: 1200px;
+        margin: auto;
+      }
+      .summary,
+      .details,
+      .quality-gate-status {
         background-color: #fff;
         padding: 20px;
         margin-bottom: 20px;
         border-radius: 8px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       }
+      .details {
+        overflow-x: auto; /* Adds a horizontal scrollbar if content overflows */
+      }
+      dl,
+      dt,
+      dd {
+        margin: 0;
+        padding: 5px 0;
+      }
       dt {
         font-weight: bold;
-        margin-top: 10px;
       }
       dd {
         margin-left: 20px;
@@ -38,212 +58,375 @@
         width: 100%;
         border-collapse: collapse;
         margin-top: 20px;
+        border: 2px solid #444;
+        border-radius: 8px;
+        overflow: hidden;
+        table-layout: fixed; /* Forces fixed layout to respect column widths */
       }
       th,
       td {
         padding: 10px;
-        border-bottom: 1px solid #ddd;
+        border: 1px solid #ddd;
+        text-align: left;
+        overflow-wrap: break-word;
+        white-space: normal;
       }
       th {
-        text-align: left;
         background-color: #f1f1f1;
+        font-weight: bold;
+        color: #555;
       }
+      /* Column width specifications */
+      .col-rule {
+        width: 12%;
+      }
+      .col-severity {
+        width: 8%;
+      }
+      .col-component {
+        width: 12%;
+      }
+      .col-line {
+        width: 5%;
+      }
+      .col-description {
+        width: 18%;
+      }
+      .col-message {
+        width: 35%;
+      }
+      .col-status {
+        width: 10%;
+      }
+
+      /* Severity styles */
       .high {
         color: #d43223;
+        font-weight: bold;
       }
       .medium {
         color: #f39c12;
+        font-weight: bold;
       }
       .low {
         color: #319ddb;
+        font-weight: bold;
       }
-      /* Color-coded severity */
       .sevHIGH {
         background-color: #d43223;
+        color: #fff;
+        padding: 5px 10px;
+        border-radius: 4px;
+        text-align: center;
       }
       .sevMEDIUM {
         background-color: #f39c12;
+        color: #fff;
+        padding: 5px 10px;
+        border-radius: 4px;
+        text-align: center;
       }
       .sevLOW {
         background-color: #319ddb;
+        color: #fff;
+        padding: 5px 10px;
+        border-radius: 4px;
+        text-align: center;
       }
-      .hidden {
-        display: none;
+      /* Button styling */
+      .button-group {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+        justify-content: flex-start;
+      }
+      .button {
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        text-decoration: none;
+        outline: none;
+        font-size: 16px;
+      }
+      .button:hover {
+        background-color: #0056b3;
+      }
+      /* Accessibility */
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        border: 0;
+      }
+      .report-summary {
+        background: linear-gradient(135deg, #ffffff, #f7f7f7);
+        padding: 25px;
+        margin-bottom: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e0e0e0;
+      }
+      .report-summary h1 {
+        font-size: 26px;
+        font-weight: bold;
+        margin-bottom: 20px;
+        color: #333;
+      }
+      .report-summary h1::after {
+        content: "";
+        display: block;
+        width: 100%; /* Make the line span the entire width of the heading */
+        height: 3px;
+        background-color: #007bff;
+        margin-top: 8px;
+      }
+
+      .report-summary dl {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 8px;
+        margin-top: 10px;
+        font-size: 16px;
+        color: #555;
+      }
+      .report-summary dt {
+        font-weight: bold;
+        color: #333;
+        display: flex;
+        align-items: center;
+      }
+
+      .report-summary dd {
+        margin: 0;
+        padding-left: 15px;
+      }
+      .report-summary a {
+        color: #007bff;
+        text-decoration: none;
+      }
+      .report-summary a:hover {
+        text-decoration: underline;
+      }
+      /* Divider line between items */
+      .divider {
+        grid-column: 1 / -1;
+        height: 1px;
+        background-color: #ddd;
+        margin: 10px 0;
+      }
+      .quality-gate-status {
+        background-color: #f7f7f7;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .quality-gate-status h2 {
+        font-size: 20px;
+        color: #333;
+        margin-bottom: 10px;
+      }
+
+      .quality-gate-status .status-badge {
+        display: inline-block;
+        font-weight: bold;
+        padding: 5px 10px;
+        color: #fff;
+        border-radius: 4px;
+        text-align: center;
+      }
+
+      /* Green background for OK status */
+      .status-ok {
+        background-color: #4caf50; /* Green for OK */
+      }
+
+      /* Red background for failed or other statuses */
+      .status-failed {
+        background-color: #d4333f; /* Red for Failed */
+      }
+      h2 {
+        border-bottom: 3px solid #007bff; /* Blue underline */
+        padding-bottom: 5px; /* Space between text and underline */
+        margin-bottom: 15px; /* Space below the heading */
       }
     </style>
   </head>
 
   <body>
-    <div class="summup">
-      <h1>SonarQube <%= vulnerabilityPhrase %> Report</h1>
+    <div class="container">
+      <div class="report-summary">
+        <h1>SonarQube <%= vulnerabilityPhrase %> Report</h1>
+        <dl>
+          <dt>📅 Report Generated On</dt>
+          <dd><%= date %></dd>
 
-      <dl>
-        <dt>Report Generated On</dt>
-        <dd><%= date %></dd>
+          <span class="divider"></span>
 
-        <dt>Project Name/URL</dt>
-        <dd>
-          <a
-            href="<%= sonarBaseURL %>/dashboard?id=<%= sonarComponent %>"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <%= projectName %>
-          </a>
-        </dd>
+          <dt>🔗 Project Name/URL</dt>
+          <dd>
+            <a
+              href="<%= sonarBaseURL %>/dashboard?id=<%= sonarComponent %>"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <%= projectName %>
+            </a>
+          </dd>
 
-        <dt>Application</dt>
-        <dd><%= applicationName %></dd>
+          <span class="divider"></span>
 
-        <dt>Release</dt>
-        <dd><%= releaseName %></dd>
+          <dt>📦 Application</dt>
+          <dd><%= applicationName %></dd>
 
-        <dt>Branch</dt>
-        <dd><%= branch %></dd>
+          <span class="divider"></span>
 
-        <dt>Delta Analysis</dt>
-        <dd><%= deltaAnalysis %></dd>
+          <dt>🚀 Release</dt>
+          <dd><%= releaseName %></dd>
 
-        <% if (!noCoverage) { %>
-        <dt>Coverage</dt>
-        <dd><%= coverage %></dd>
-        <% } %> <% if (inNewCodePeriod) { %>
-        <dt>New Code Period</dt>
-        <dd><%= inNewCodePeriod %></dd>
-        <% } %>
-      </dl>
+          <span class="divider"></span>
+
+          <dt>🌿 Branch</dt>
+          <dd><%= branch %></dd>
+
+          <span class="divider"></span>
+
+          <dt>📊 Delta Analysis</dt>
+          <dd><%= deltaAnalysis %></dd>
+
+          <% if (!noCoverage) { %>
+          <span class="divider"></span>
+          <dt>🧪 Coverage</dt>
+          <dd><%= coverage %></dd>
+          <% } %> <% if (inNewCodePeriod) { %>
+          <span class="divider"></span>
+          <dt>🆕 New Code Period</dt>
+          <dd><%= inNewCodePeriod %></dd>
+          <% } %>
+        </dl>
+      </div>
 
       <% if (qualityGateStatus) { %>
-      <h2>
-        Quality Gate Status: <%= qualityGateStatus.projectStatus.status %> since
-        <%= qualityGateStatusPeriodDate %>
-      </h2>
-      <table aria-label="Quality Gate Status">
-        <thead>
-          <tr>
-            <th>Status</th>
-            <th>Metric</th>
-            <th>Value - Threshold</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% for (const condition of qualityGateStatus.projectStatus.conditions)
-          { %>
-          <tr>
-            <td
-              style="background-color: <%- condition.status === 'OK' ? '#0a0' : '#d4333f' %>"
-            ></td>
-            <td><%= condition.metricKey %></td>
-            <td>
-              <%= condition.actualValue %> <%= condition.comparator === 'GT' ?
-              '>' : '<' %> <%= condition.errorThreshold %>
-            </td>
-          </tr>
-          <% } %>
-        </tbody>
-      </table>
-      <% } %>
-    </div>
-
-    <div class="summup">
-      <h2>Summary of Detected <%= vulnerabilityPluralPhrase %></h2>
-      <table aria-label="Vulnerability Summary">
-        <thead>
-          <tr>
-            <th>Severity</th>
-            <th>Number of Issues</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="sevHIGH">HIGH</td>
-            <td><%= summary.high %></td>
-          </tr>
-          <tr>
-            <td class="sevMEDIUM">MEDIUM</td>
-            <td><%= summary.medium %></td>
-          </tr>
-          <tr>
-            <td class="sevLOW">LOW</td>
-            <td><%= summary.low %></td>
-          </tr>
-        </tbody>
-      </table>
-
-      <% if (issues.length > 0) { %>
-      <canvas
-        id="vulnerabilitiesPieChart"
-        width="200"
-        height="200"
-        aria-label="Vulnerabilities Pie Chart"
-      ></canvas>
-      <% } %>
-    </div>
-
-    <div class="detail">
-      <% if (issues.length > 0) { %>
-      <h2>Detail of Detected <%= vulnerabilityPluralPhrase %></h2>
-      <table aria-label="Vulnerability Details">
-        <thead>
-          <tr>
-            <th>Rule</th>
-            <th>Severity</th>
-            <th>Component</th>
-            <th>Line</th>
-            <th>Description</th>
-            <th>Message</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% issues.forEach(issue => { %>
-          <tr>
-            <td>
-              <a
-                href="<%= sonarBaseURL %>/coding_rules#rule_key=<%= issue.rule %>"
-                target="_blank"
-                rel="noopener noreferrer"
-                ><%= issue.rule %></a
+      <div class="quality-gate-status">
+        <h2>
+          Quality Gate Status:
+          <span
+            class="status-badge <%= qualityGateStatus.projectStatus.status === 'OK' ? 'status-ok' : 'status-failed' %>"
+          >
+            <%= qualityGateStatus.projectStatus.status %>
+          </span>
+          since <%= qualityGateStatusPeriodDate %>
+        </h2>
+        <table aria-label="Quality Gate Status">
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>Metric</th>
+              <th>Value - Threshold</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% for (const condition of
+            qualityGateStatus.projectStatus.conditions) { %>
+            <tr>
+              <td
+                class="<%= condition.status === 'OK' ? 'status-ok' : 'status-failed' %>"
               >
-            </td>
-            <td>
-              <%= issue.severity === "BLOCKER" ? "HIGH" : issue.severity %>
-            </td>
-            <td><%= issue.component %></td>
-            <td><%= issue.line || '-' %></td>
-            <td><%= issue.description %></td>
-            <td><%= issue.message %></td>
-            <td><%= issue.status %></td>
-          </tr>
-          <% }) %>
-        </tbody>
-      </table>
+                <%= condition.status %>
+              </td>
+              <td><%= condition.metricKey %></td>
+              <td>
+                <%= condition.actualValue %> <%= condition.comparator === 'GT' ?
+                '>' : '<' %> <%= condition.errorThreshold %>
+              </td>
+            </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
       <% } %>
+
+      <div class="summary">
+        <h2>Summary of Detected <%= vulnerabilityPluralPhrase %></h2>
+        <table aria-label="Vulnerability Summary">
+          <thead>
+            <tr>
+              <th>Severity</th>
+              <th>Number of Issues</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="sevHIGH">HIGH</td>
+              <td><%= summary.high %></td>
+            </tr>
+            <tr>
+              <td class="sevMEDIUM">MEDIUM</td>
+              <td><%= summary.medium %></td>
+            </tr>
+            <tr>
+              <td class="sevLOW">LOW</td>
+              <td><%= summary.low %></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="details">
+        <% if (issues.length > 0) { %>
+        <h2>Detail of Detected <%= vulnerabilityPluralPhrase %></h2>
+        <table aria-label="Vulnerability Details">
+          <thead>
+            <tr>
+              <th class="col-rule">Rule</th>
+              <th class="col-severity">Severity</th>
+              <th class="col-component">Component</th>
+              <th class="col-line">Line</th>
+              <th class="col-description">Description</th>
+              <th class="col-message">Message</th>
+              <th class="col-status">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% issues.forEach(issue => { %>
+            <tr>
+              <td>
+                <a
+                  href="<%= sonarBaseURL %>/coding_rules#rule_key=<%= issue.rule %>"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  ><%= issue.rule %></a
+                >
+              </td>
+              <td>
+                <%= issue.severity === "BLOCKER" ? "HIGH" : issue.severity %>
+              </td>
+              <td><%= issue.component %></td>
+              <td><%= issue.line || '-' %></td>
+              <td><%= issue.description %></td>
+              <td><%= issue.message %></td>
+              <td><%= issue.status %></td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+        <% } else { %>
+        <p>No vulnerabilities detected.</p>
+        <% } %>
+      </div>
+
+      <div class="button-group">
+        <a href="download-report.pdf" class="button" download>Download PDF</a>
+        <button class="button" onclick="window.print()">Print Report</button>
+      </div>
     </div>
-
-    <% if (issues.length > 0) { %>
-    <script>
-      // Pie Chart Rendering for Vulnerabilities
-      (function () {
-        const canvas = document.getElementById("vulnerabilitiesPieChart");
-        const ctx = canvas.getContext("2d");
-        const data = [<%= summary.high %>, <%= summary.medium %>, <%= summary.low %>];
-        const colors = ['#d43223', '#f39c12', '#319ddb'];
-        let lastEnd = 0;
-
-        const total = data.reduce((sum, value) => sum + value, 0);
-
-        data.forEach((value, index) => {
-          ctx.fillStyle = colors[index];
-          ctx.beginPath();
-          ctx.moveTo(canvas.width / 2, canvas.height / 2);
-          ctx.arc(canvas.width / 2, canvas.height / 2, canvas.height / 2, lastEnd, lastEnd + (Math.PI * 2 * (value / total)), false);
-          ctx.lineTo(canvas.width / 2, canvas.height / 2);
-          ctx.fill();
-          lastEnd += Math.PI * 2 * (value / total);
-        });
-      })();
-    </script>
-    <% } %>
   </body>
 </html>
