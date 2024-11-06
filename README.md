@@ -4,7 +4,7 @@
 
 ## Overview
 
-**SonarFlex** generates detailed vulnerability reports from a SonarQube instance. With customizable options and support for different SonarQube versions, SonarFlex helps teams stay on top of security issues and code quality.
+**SonarFlex** is a powerful fork of sonar-report that enhances vulnerability reports from your SonarQube instance with improved visuals and functionality. Customize your reports and analyze data with ease across different SonarQube versions.
 
 ## Installation
 
@@ -160,45 +160,15 @@ Refer to SonarQube’s documentation and your instance’s API documentation for
 
 ## Application Improvements Summary:
 
-1. **Enhanced Report Layout and Design**:
-   - Redesigned the HTML report layout to improve readability and visual appeal.
-   - Introduced a clean, professional look with improved font choices, spacing, and padding, making the report easier to scan.
-   - Used subtle background shading, borders, and rounded corners for sections to make the report visually organized.
+| Feature                       | Improvement                                                                 |
+|-------------------------------|-----------------------------------------------------------------------------|
+| Report Layout                 | Redesigned for improved readability and visual appeal.                      |
+| Sectioned UI                  | Clear sections for Summary, Quality Gate Status, and Detailed Vulnerabilities. |
+| Severity-Based Color Coding    | Color-coded badges for quick identification of critical issues.             |
+| Responsive Tables             | Improved handling of overflow and horizontal scrolling.                     |
+| Download and Export Options   | Export to PDF and print functionality.                                    |
+| Interactive Features          | Alt text for images, improved link styling, and tooltips.                  |
+| Consistent Iconography        | Standardized icons for a cohesive look.                                     |
+| Improved Error Handling       | Clearer error messages and troubleshooting suggestions.                     |
+| Code Refactoring and Modularity | Improved code organization for easier maintenance.                           |
 
-2. **Detailed Sectioned UI for Report Data**:
-   - Structured the report into distinct sections, including the "Summary," "Quality Gate Status," and "Detailed Vulnerabilities" sections, so users can easily locate specific information.
-   - Improved headings with blue underlines to visually separate sections and enhance navigation.
-
-3. **Severity-Based Color Coding**:
-   - Implemented color-coded badges for severity levels (HIGH, MEDIUM, LOW) in both the summary and details sections, helping users quickly identify critical issues.
-   - Used color contrast to make each severity level easily distinguishable and visually prominent.
-
-4. **Overflow and Responsive Table Improvements**:
-   - Adjusted the layout for the "Detailed Vulnerabilities" table to handle overflow issues, ensuring data displays correctly even with long text entries.
-   - Set maximum column widths for specific fields like "Component" and "Message" to prevent overflowing text, while still displaying important information with ellipsis (`...`) where necessary.
-   - Enabled horizontal scrolling for the details section, allowing users to view full data on smaller screens or when the table content exceeds the container width.
-
-5. **Download and Export Options**:
-   - Added an "Export to PDF" feature using `html2pdf.js`, enabling users to save the report as a PDF file for sharing or archiving.
-   - Moved the "Export to PDF" button to the top-right of the "Summary" section for quick access, following UI conventions for document actions.
-   - Positioned the "Print Report" button in a clearly visible area to make it convenient for users to print a hard copy of the report.
-
-6. **Interactive and Accessible Features**:
-   - Added alt text for links and icon descriptions to improve accessibility for users with screen readers.
-   - Improved link styling with color and hover effects, making clickable elements easily identifiable.
-   - Used icons (e.g., 📅, 🔗, 📦) next to data labels for a more engaging and visually appealing experience in the summary section.
-
-7. **Tooltips and Helper Text**:
-   - Added tooltips or helper text where necessary, especially for complex fields and severity levels, to clarify information for users unfamiliar with specific terms or concepts.
-
-8. **Consistent Iconography and Visual Indicators**:
-   - Standardized the use of icons across the application to create a cohesive look and make key information immediately recognizable.
-   - Used status badges for "Quality Gate Status" (e.g., green for OK, red for FAILED) to reinforce the report’s current state at a glance.
-
-9. **Improved Error Handling and Feedback**:
-   - Enhanced error messaging for PDF export or data loading issues, providing users with clearer feedback and troubleshooting suggestions if something goes wrong.
-   - Checked compatibility with various SonarQube versions, ensuring error-free functionality for different configurations and environments.
-
-10. **Code Refactoring and Modularity**:
-    - Refactored CSS styling to make it modular and easier to maintain, especially for shared components like tables, buttons, and badges.
-    - Improved JavaScript modularity by organizing functions, such as PDF export, into reusable code blocks, making future updates and maintenance simpler.
