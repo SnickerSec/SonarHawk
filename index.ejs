@@ -254,7 +254,9 @@
             class="status-badge <%= qualityGateStatus.projectStatus.status === 'OK' ? 'status-ok' : 'status-failed' %>"
             ><%= qualityGateStatus.projectStatus.status %></span
           >
-          since <%= qualityGateStatusPeriodDate %>
+          <% if (qualityGateStatusPeriodDate && qualityGateStatusPeriodDate !== 'N/A') { %>
+            since <%= qualityGateStatusPeriodDate %>
+          <% } %>
         </p>
       </div>
       <% } %>

@@ -1,20 +1,32 @@
 {
-  "name": "sonar-report",
-  "version": "3.1.6",
+  "name": "sonarflex",
+  "version": "1.0.0",
+  "description": "SonarQube reporting tool for improved code analysis",
   "main": "index.js",
-  "author": "SopraSteria",
+  "author": "SnickerSec",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/snickersec/sonarflex.git"
+  },
+  "keywords": [
+    "sonar",
+    "report",
+    "analysis"
+  ],
   "bin": {
-    "sonar-report": "./cli.js"
+    "sonarflex": "./cli.js"
   },
   "exports": "./index.js",
   "scripts": {
-    "test": "mocha -R mocha-lcov-reporter > coverage.lcov"
+    "test": "mocha -R mocha-lcov-reporter > coverage.lcov",
+    "coverage": "nyc mocha"
   },
   "type": "module",
   "dependencies": {
     "commander": "^12.0.0",
     "ejs": "^3.1.10",
-    "got": "^11.8.5",
+    "got": "^14.4.5",
     "hpagent": "^1.2.0",
     "properties-file": "^3.5.4",
     "proxy-from-env": "^1.1.0",
@@ -22,7 +34,8 @@
   },
   "devDependencies": {
     "mocha": "^10.3.0",
-    "mocha-lcov-reporter": "^1.3.0"
+    "mocha-lcov-reporter": "^1.3.0",
+    "nyc": "^15.1.0"
   },
   "publishConfig": {
     "access": "public"

@@ -1,174 +1,173 @@
-# SonarFlex
+# 📊 SonarFlex
 
-![Project Overview](image-1.png)
+> An enhanced fork of [sonar-report](https://github.com/soprasteria/sonar-report) that provides modern vulnerability reporting for SonarQube.
 
-## Overview
+![Version](https://img.shields.io/github/v/release/cwills/sonarflex)
+![Build](https://img.shields.io/github/workflow/status/cwills/sonarflex/CI)
+![Coverage](https://img.shields.io/codecov/c/github/cwills/sonarflex)
+![License](https://img.shields.io/github/license/cwills/sonarflex)
+![Node](https://img.shields.io/node/v/sonarflex)
+![Dependencies](https://img.shields.io/librariesio/github/cwills/sonarflex)
 
-**SonarFlex** is a powerful fork of sonar-report that enhances vulnerability reports from your SonarQube instance with improved visuals and functionality. Customize your reports and analyze data with ease across different SonarQube versions.
+<p align="center">
+  <img src="screenshots/report.png" alt="SonarFlex Report Example" width="800"><br/>
+  <em>Enhanced vulnerability reporting with modern UI and advanced features</em>
+</p>
 
-## Installation
+## Key Features Over sonar-report
 
-- **Requirements**: Node.js v14+
-  
-To install globally, run:
+| Feature           | sonar-report | SonarFlex  |
+| ----------------- | ------------ | ---------- |
+| SonarQube Support | ≤ 7.9        | Up to 10.x |
+| PDF Export        | ❌           | ✅         |
+| Modern UI         | Basic        | Enhanced   |
+| Quality Gates     | Basic        | Detailed   |
+| Issue Tracking    | Basic        | Enhanced   |
+| Hotspot Support   | Limited      | Full       |
+| Delta Analysis    | Limited      | Full       |
+| Debug Mode        | ❌           | ✅         |
+| Proxy Support     | Basic        | Advanced   |
+| Custom Templates  | Basic        | Full EJS   |
 
-```bash
-npm install -g sonar-report
-```
-
-## Usage
-
-SonarFlex can generate reports with various configurations. To view all available options, run:
-
-```bash
-sonar-report -h
-```
-
-This will display:
-
-```plaintext
-Usage: sonar-report [options]
-
-Generate a vulnerability report from a SonarQube instance.
-```
-
-### Environment Variables
-
-- **http_proxy**: Proxy to connect to SonarQube (`http://<host>:<port>`)
-- **NODE_EXTRA_CA_CERTS**: Custom certificate authority file for SSL verification (PEM format)
-
-### Example Command
-
-Generate a report:
+## Quick Start
 
 ```bash
-sonar-report \
-  --sonarurl="https://sonarcloud.io" \
-  --sonarcomponent="soprasteria_sonar-report" \
-  --sonarorganization="sopra-steria" \
-  --project="Sonar Report" \
-  --application="sonar-report" \
-  --release="1.0.0" \
-  --branch="master" \
-  --output="samples/sonar-report_sonar-report.html"
+# Installation
+npm install -g sonarflex
+
+# Basic Usage
+sonarflex \
+  --sonarurl="https://sonar.company.com" \
+  --sonarcomponent="project-key" \
+  --sonartoken="your-token" \
+  --output="report.html"
 ```
 
-To open the report in your browser:
+## 📖 Documentation
+
+### Essential Configuration
 
 ```bash
-xdg-open samples/sonar-report_sonar-report.html
+# Authentication (Token - Recommended)
+sonarflex --sonartoken="your-token"
+
+# Authentication (Username/Password)
+sonarflex --sonarusername="user" --sonarpassword="pass"
+
+# Branch Analysis
+sonarflex --branch="feature/new-auth"
+
+# Quality Gates
+sonarflex --quality-gate-status --coverage
 ```
 
-## Migrating to v3
-
-### Key Changes
-
-- **Flag Changes**: Most flags now use kebab-case.
-- **Output Folder**: Use the `--output` flag to specify a folder for the generated report. This enables viewing summaries directly in CI pipelines.
-
-Example summary format:
-
-```plaintext
-Report Generated On Wed Aug 24 2022
-
-Project Name: Sonar Report
-Application: sonar-report
-Release: 1.0.0
-Delta analysis: No
-
-Summary of the Detected Vulnerabilities
-
-Severity: HIGH
-Number of Issues: 0
-
-Severity: MEDIUM
-Number of Issues: 0
-
-Severity: LOW
-Number of Issues: 0
-```
-
-## Key Parameters
-
-### `--since-leak-period`
-
-Enables delta analysis. If set to `true`, only vulnerabilities added since a specific date/version or within a set number of days are shown.
-
-This option:
-
-1. Retrieves `sonar.leak.period` from SonarQube settings.
-2. Filters issues by this period.
-
-More information on [SonarQube’s leak period](https://docs.sonarqube.org/latest/user-guide/fixing-the-water-leak/).
-
-### `--allbugs`
-
-- **"false"**: Only vulnerabilities are included.
-- **"true"**: Includes all bugs.
-
-### `--fix-missing-rule`
-
-Handles discrepancies in issue types (`VULNERABILITY` vs `CODE_SMELL`) across different SonarQube versions.
-
-Activating this parameter:
-
-- Ensures rules are extracted even when types don’t align.
-- May result in additional issues being included.
-
-### `--no-security-hotspot`
-
-Disables hotspot processing, which varies by SonarQube version. Use this option if your instance doesn’t fully support hotspots.
-
-#### Hotspot Support by SonarQube Version:
-
-- **< 7.3**: No support for hotspots.
-- **7.3 - 7.8**: Hotspots stored in `/issues` endpoint; some statuses unavailable.
-- **7.8 - 8.2**: Hotspots fully supported in `/issues`.
-- **>= 8.2**: Hotspots moved to `/hotspots` endpoint.
-
-To check your instance’s behavior:
-
-- View `api/system/status` for version info.
-- Check `/web_api/api/issues/search` and `/web_api/api/rules/search` for parameter options.
-
-## Development
-
-To set up for development, install dependencies:
+### Report Customization
 
 ```bash
-npm install
+# Custom Template
+sonarflex --ejs-file="template.ejs"
+
+# Custom Styling
+sonarflex --stylesheet-file="custom.css"
+
+# Custom Labels
+sonarflex \
+  --vulnerability-phrase="Security Issue" \
+  --vulnerability-plural-phrase="Security Issues"
 ```
 
-Then, run commands like in the [Usage](#usage) section but replace `sonar-report` with `node cli.js`.
+## 🔧 Configuration Options
 
-## Troubleshooting
+### Required Options
 
-### Common Issues
+| Option             | Description   | Default |
+| ------------------ | ------------- | ------- |
+| `--sonarurl`       | SonarQube URL | -       |
+| `--sonarcomponent` | Project key   | -       |
+| `--sonartoken`     | Auth token    | -       |
+| `--output`         | Report path   | -       |
 
-- **Missing Rule Descriptions**: Use `--fix-missing-rule` to fetch all rules.
-- **400 Bad Request for Hotspot Types**: If your SonarQube instance doesn’t support hotspots, use `--no-security-hotspot`.
-- **Too Many Results**: SonarQube limits results to 10,000. Use filters or remove `--allbugs` if needed.
+### Analysis Options
 
-## Additional Notes
+| Option                  | Description       | Default |
+| ----------------------- | ----------------- | ------- |
+| `--branch`              | Branch to analyze | main    |
+| `--in-new-code-period`  | Delta analysis    | false   |
+| `--allbugs`             | Include all bugs  | false   |
+| `--no-security-hotspot` | Disable hotspots  | false   |
 
-Refer to SonarQube’s documentation and your instance’s API documentation for details on available settings:
+### Visualization Options
 
-- **Status**: `${sonarBaseURL}/api/system/status`
-- **Issues**: `${sonarBaseURL}/web_api/api/issues/search`
-- **Rules**: `${sonarBaseURL}/web_api/api/rules/search`
-- **Hotspots**: `${sonarBaseURL}/web_api/api/hotspots`
+| Option                  | Description        | Default |
+| ----------------------- | ------------------ | ------- |
+| `--quality-gate-status` | Show quality gates | false   |
+| `--coverage`            | Show coverage      | false   |
+| `--link-issues`         | Link to SonarQube  | false   |
+| `--no-rules-in-report`  | Hide rules section | false   |
 
-## Application Improvements Summary:
+## 🛠️ Advanced Features
 
-| Feature                       | Improvement                                                                 |
-|-------------------------------|-----------------------------------------------------------------------------|
-| Report Layout                 | Redesigned for improved readability and visual appeal.                      |
-| Sectioned UI                  | Clear sections for Summary, Quality Gate Status, and Detailed Vulnerabilities. |
-| Severity-Based Color Coding    | Color-coded badges for quick identification of critical issues.             |
-| Responsive Tables             | Improved handling of overflow and horizontal scrolling.                     |
-| Download and Export Options   | Export to PDF and print functionality.                                    |
-| Interactive Features          | Alt text for images, improved link styling, and tooltips.                  |
-| Consistent Iconography        | Standardized icons for a cohesive look.                                     |
-| Improved Error Handling       | Clearer error messages and troubleshooting suggestions.                     |
-| Code Refactoring and Modularity | Improved code organization for easier maintenance.                           |
+### Delta Analysis
 
+Track changes between versions:
+
+```bash
+sonarflex \
+  --in-new-code-period \
+  --branch="feature/new-auth"
+```
+
+### Quality Gate Status
+
+Include detailed quality metrics:
+
+```bash
+sonarflex \
+  --quality-gate-status \
+  --coverage
+```
+
+### Custom Report Styling
+
+```bash
+sonarflex \
+  --stylesheet-file="custom.css" \
+  --ejs-file="template.ejs"
+```
+
+## 🔍 Debugging
+
+Enable detailed logging:
+
+```bash
+sonarflex --debug
+```
+
+Debug output includes:
+
+- API requests/responses
+- Authentication process
+- Template rendering
+- File operations
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit changes (`git commit -m 'Add AmazingFeature'`)
+4. Push to branch (`git push origin feature/AmazingFeature`)
+5. Open Pull Request
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) for details
+
+## 🙏 Acknowledgments
+
+- Original [sonar-report](https://github.com/soprasteria/sonar-report) team
+- [SonarQube](https://www.sonarqube.org/) team for their excellent API
+- Community contributors and users
+
+---
+
+<p align="center">Made with ❤️ by the SonarFlex Team</p>

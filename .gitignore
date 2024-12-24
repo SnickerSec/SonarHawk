@@ -1,3 +1,28 @@
+# Node.js
 node_modules/
-sonar-report.html
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Build & test outputs
+coverage/
 coverage.lcov
+sonar-report.html
+*.html
+dist/
+build/
+tmp/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.swo
+.env
+*.log
+
+# Keep only source files in version control
+# Everything not explicitly ignored is included by default
+# No need for ! patterns unless matching previous ignore pattern
