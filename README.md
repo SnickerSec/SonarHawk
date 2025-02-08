@@ -2,17 +2,17 @@
 
 > An enhanced fork of [sonar-report](https://github.com/soprasteria/sonar-report) that provides modern vulnerability reporting for SonarQube.
 
-![Version](https://img.shields.io/github/v/release/SnickerSec/sonarflex)
-![License](https://img.shields.io/github/license/SnickerSec/sonarflex)
+![Version](https://img.shields.io/github/v/release/SnickerSec/sonarhawk)
+![License](https://img.shields.io/github/license/SnickerSec/sonarhawk)
 
 <p align="center">
-  <img src="screenshots/dark_theme.png" alt="SonarFlex Report Example" width="800"><br/>
+  <img src="screenshots/dark_theme.png" alt="SonarHawk Report Example" width="800"><br/>
   <em>Enhanced vulnerability reporting with modern UI and advanced features</em>
 </p>
 
 ## Key Features Over sonar-report
 
-| Feature           | sonar-report | SonarFlex  |
+| Feature           | sonar-report | SonarHawk  |
 | ----------------- | ------------ | ---------- |
 | SonarQube Support | ≤ 7.9        | Up to 10.x |
 | PDF Export        | ❌           | ✅         |
@@ -30,10 +30,10 @@
 
 ```bash
 # Installation
-npm install -g sonarflex
+npm install -g sonarhawk
 
 # Basic Usage
-sonarflex \
+sonarhawk \
   --sonarurl="https://sonar.company.com" \
   --sonarcomponent="project-key" \
   --sonartoken="your-token" \
@@ -46,29 +46,29 @@ sonarflex \
 
 ```bash
 # Authentication (Token - Recommended)
-sonarflex --sonartoken="your-token"
+sonarhawk --sonartoken="your-token"
 
 # Authentication (Username/Password)
-sonarflex --sonarusername="user" --sonarpassword="pass"
+sonarhawk --sonarusername="user" --sonarpassword="pass"
 
 # Branch Analysis
-sonarflex --branch="feature/new-auth"
+sonarhawk --branch="feature/new-auth"
 
 # Quality Gates
-sonarflex --quality-gate-status --coverage
+sonarhawk --quality-gate-status --coverage
 ```
 
 ### Report Customization
 
 ```bash
 # Custom Template
-sonarflex --ejs-file="template.ejs"
+sonarhawk --ejs-file="template.ejs"
 
 # Custom Styling
-sonarflex --stylesheet-file="custom.css"
+sonarhawk --stylesheet-file="custom.css"
 
 # Custom Labels
-sonarflex \
+sonarhawk \
   --vulnerability-phrase="Security Issue" \
   --vulnerability-plural-phrase="Security Issues"
 ```
@@ -78,7 +78,7 @@ sonarflex \
 Use the dark theme:
 
 ```bash
-sonarflex --sonarurl=http://your.sonar.instance --sonarcomponent=your:project:key --output=report.html --dark-theme
+sonarhawk --sonarurl=http://your.sonar.instance --sonarcomponent=your:project:key --output=report.html --dark-theme
 ```
 
 ## 🔧 Configuration Options
@@ -118,7 +118,7 @@ sonarflex --sonarurl=http://your.sonar.instance --sonarcomponent=your:project:ke
 Track changes between versions:
 
 ```bash
-sonarflex \
+sonarhawk \
   --in-new-code-period \
   --branch="feature/new-auth"
 ```
@@ -128,7 +128,7 @@ sonarflex \
 Include detailed quality metrics:
 
 ```bash
-sonarflex \
+sonarhawk \
   --quality-gate-status \
   --coverage
 ```
@@ -136,14 +136,14 @@ sonarflex \
 ### Custom Report Styling
 
 ```bash
-sonarflex \
+sonarhawk \
   --stylesheet-file="custom.css" \
   --ejs-file="template.ejs"
 ```
 
 ## 🎨 Themes & Visual Customization
 
-SonarFlex comes with built-in support for both light and dark themes, designed to optimize readability and reduce eye strain.
+SonarHawk comes with built-in support for both light and dark themes, designed to optimize readability and reduce eye strain.
 
 ### Available Themes
 
@@ -172,7 +172,7 @@ SonarFlex comes with built-in support for both light and dark themes, designed t
 Enable dark theme via command line:
 
 ```bash
-sonarflex --dark-theme [other options...]
+sonarhawk --dark-theme [other options...]
 ```
 
 Or in your configuration file:
@@ -199,7 +199,7 @@ Both themes include:
 Want to customize the look further? Use your own CSS:
 
 ```bash
-sonarflex --stylesheet-file="path/to/custom.css"
+sonarhawk --stylesheet-file="path/to/custom.css"
 ```
 
 ## 🔍 Debugging
@@ -207,7 +207,7 @@ sonarflex --stylesheet-file="path/to/custom.css"
 Enable detailed logging:
 
 ```bash
-sonarflex --debug
+sonarhawk --debug
 ```
 
 Debug output includes:
@@ -237,4 +237,4 @@ MIT License - see [LICENSE](LICENSE) for details
 
 ---
 
-<p align="center">Made with ❤️ by the SonarFlex Team</p>
+<p align="center">Made with ❤️ by the SonarHawk Team</p>

@@ -15,7 +15,7 @@
     "analysis"
   ],
   "bin": {
-    "sonarhawk": "./cli.js"
+    "sonarhawk": "cli.js"
   },
   "exports": "./index.js",
   "scripts": {
