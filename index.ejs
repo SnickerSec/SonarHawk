@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="<%= darkTheme ? 'dark' : 'light' %>">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,25 +7,55 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
 
     <style>
+      /* Light Theme (Default) Variables */
+      :root {
+        --bg-color: #f7f7f7;
+        --text-color: #333;
+        --section-bg: #fff;
+        --border-color: #e0e0e0;
+        --hover-bg: #f1faff;
+        --header-border: #007bff;
+        --th-bg: #f7f7f7;
+        --even-row-bg: #fafafa;
+        --shadow-color: rgba(0, 0, 0, 0.1);
+        --link-color: #0066cc;
+        --link-hover-color: #0056b3;
+      }
+
+      /* Dark Theme Variables */
+      .dark {
+        --bg-color: #1a1a1a;
+        --text-color: #e0e0e0;
+        --section-bg: #2d2d2d;
+        --border-color: #404040;
+        --hover-bg: #3d3d3d;
+        --header-border: #3b82f6;
+        --th-bg: #363636;
+        --even-row-bg: #333333;
+        --shadow-color: rgba(0, 0, 0, 0.3);
+        --link-color: #66b3ff;
+        --link-hover-color: #99ccff;
+      }
+
       /* Enhanced styling for readability and structure */
       body {
         font-family: Arial, sans-serif;
-        color: #333;
+        color: var(--text-color);
         margin: 0;
         padding: 20px;
-        background-color: #f7f7f7;
+        background-color: var(--bg-color);
       }
       h1 {
-        color: #333;
+        color: var(--text-color);
         font-size: 28px;
         margin-bottom: 20px;
       }
       h2 {
-        color: #333;
+        color: var(--text-color);
         font-size: 22px;
         margin-top: 30px;
         padding-bottom: 5px;
-        border-bottom: 3px solid #007bff; /* Blue underline */
+        border-bottom: 3px solid var(--header-border); /* Blue underline */
       }
       .container {
         max-width: 1000px;
@@ -33,25 +63,25 @@
       }
       /* General Section Styling */
       .section {
-        background-color: #fff;
+        background-color: var(--section-bg);
         padding: 20px;
         margin-bottom: 20px;
         border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 4px var(--shadow-color);
       }
       .report-summary {
         position: relative; /* For positioning the button inside */
-        background: linear-gradient(135deg, #ffffff, #f7f7f7);
+        background: var(--section-bg);
         padding: 25px;
         margin-bottom: 20px;
         border-radius: 12px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        border: 1px solid #e0e0e0;
+        box-shadow: 0 4px 8px var(--shadow-color);
+        border: 1px solid var(--border-color);
       }
       .report-summary h1 {
         font-size: 28px;
         font-weight: bold;
-        color: #333;
+        color: var(--text-color);
       }
       .report-summary h1::after {
         content: "";
@@ -66,11 +96,11 @@
         grid-template-columns: 1fr 2fr;
         gap: 10px;
         font-size: 16px;
-        color: #555;
+        color: var(--text-color);
       }
       .report-summary dt {
         font-weight: bold;
-        color: #333;
+        color: var(--text-color);
       }
       .report-summary dd {
         margin: 0;
@@ -94,7 +124,7 @@
       .divider {
         grid-column: 1 / -1;
         height: 1px;
-        background-color: #ddd;
+        background-color: var(--border-color);
         margin: 10px 0;
       }
       /* Quality Gate Status Styling */
@@ -113,31 +143,31 @@
       /* Table Styling */
       .details {
         overflow-x: auto;
-        background-color: #fff;
+        background-color: var(--section-bg);
         padding: 20px;
         border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 4px var(--shadow-color);
       }
       table {
         width: 100%;
         border-collapse: collapse;
         margin-top: 15px;
-        border: 1px solid #ddd;
+        border: 1px solid var(--border-color);
         overflow: hidden;
         table-layout: fixed;
       }
       th,
       td {
         padding: 12px 8px;
-        border-bottom: 1px solid #e0e0e0;
+        border-bottom: 1px solid var(--border-color);
         text-align: left;
         font-size: 14px;
         overflow-wrap: break-word;
       }
       th {
-        background-color: #f7f7f7;
+        background-color: var(--th-bg);
         font-weight: bold;
-        color: #555;
+        color: var(--text-color);
       }
       .col-severity,
       .col-line,
@@ -174,10 +204,10 @@
       }
       /* Alternate row colors for better readability */
       tr:nth-child(even) {
-        background-color: #fafafa;
+        background-color: var(--even-row-bg);
       }
       tr:hover {
-        background-color: #f1faff;
+        background-color: var(--hover-bg);
       }
       /* Button Styling */
       .button-group {
@@ -204,6 +234,32 @@
         .button-group {
           display: none; /* Hide the button group when printing */
         }
+        /* Override dark theme for printing */
+        .dark {
+          --bg-color: #ffffff;
+          --text-color: #000000;
+          --section-bg: #ffffff;
+          --border-color: #cccccc;
+          --th-bg: #f0f0f0;
+          --even-row-bg: #ffffff;
+        }
+      }
+
+      /* Update link styles */
+      a {
+        color: var(--link-color);
+        text-decoration: none;
+        transition: color 0.2s ease;
+      }
+
+      a:hover {
+        color: var(--link-hover-color);
+        text-decoration: underline;
+      }
+
+      /* Ensure links in tables remain visible */
+      td a {
+        font-weight: 500;
       }
     </style>
   </head>

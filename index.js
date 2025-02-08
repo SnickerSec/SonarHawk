@@ -719,7 +719,7 @@ async function generateOutput(data, options) {
 
     const renderedFile = await ejs.renderFile(
       templateFile,
-      { ...data, stylesheet },
+      { ...data, stylesheet, darkTheme: options.darkTheme },
       {}
     );
     
@@ -836,6 +836,10 @@ const buildCommand = () => {
     .option(
       "--debug",
       "Enable debug logging"
+    )
+    .option(
+      "--dark-theme",
+      "Enable dark theme for the report"
     )
         .addHelpText(
           "after",

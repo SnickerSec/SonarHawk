@@ -28,6 +28,7 @@
 | Debug Mode        | ❌           | ✅         |
 | Proxy Support     | Basic        | Advanced   |
 | Custom Templates  | Basic        | Full EJS   |
+| Dark Theme        | ❌           | ✅         |
 
 ## Quick Start
 
@@ -76,6 +77,14 @@ sonarflex \
   --vulnerability-plural-phrase="Security Issues"
 ```
 
+### Theme Options
+
+Use the dark theme:
+
+```bash
+sonarflex --sonarurl=http://your.sonar.instance --sonarcomponent=your:project:key --output=report.html --dark-theme
+```
+
 ## 🔧 Configuration Options
 
 ### Required Options
@@ -104,6 +113,7 @@ sonarflex \
 | `--coverage`            | Show coverage      | false   |
 | `--link-issues`         | Link to SonarQube  | false   |
 | `--no-rules-in-report`  | Hide rules section | false   |
+| `--dark-theme`          | Enable dark theme  | false   |
 
 ## 🛠️ Advanced Features
 
@@ -134,6 +144,20 @@ sonarflex \
   --stylesheet-file="custom.css" \
   --ejs-file="template.ejs"
 ```
+
+## Themes
+
+### Light Theme (Default)
+
+- Clean, professional design
+- White background with dark text
+- Optimal for printing
+
+### Dark Theme
+
+- Reduced eye strain in low-light environments
+- Dark background with light text
+- Automatically switches to light theme for printing
 
 ## 🔍 Debugging
 
