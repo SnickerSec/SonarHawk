@@ -3,7 +3,7 @@
 > An enhanced fork of [sonar-report](https://github.com/soprasteria/sonar-report) that provides modern vulnerability reporting for SonarQube.
 
 ![Version](https://img.shields.io/github/v/release/SnickerSec/sonarflex)
-![Build](https://img.shields.io/github/workflow/status/SnickerSec/sonarflex/CI)
+![Build](https://img.shields.io/github/workflow/status/SnickerSec/sonarflex/build)
 ![Coverage](https://img.shields.io/codecov/c/github/SnickerSec/sonarflex)
 ![License](https://img.shields.io/github/license/SnickerSec/sonarflex)
 ![Node](https://img.shields.io/node/v/sonarflex)
