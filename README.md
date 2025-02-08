@@ -10,7 +10,7 @@
 ![Dependencies](https://img.shields.io/librariesio/github/cwills/sonarflex)
 
 <p align="center">
-  <img src="screenshots/report.png" alt="SonarFlex Report Example" width="800"><br/>
+  <img src="screenshots/dark_theme.png" alt="SonarFlex Report Example" width="800"><br/>
   <em>Enhanced vulnerability reporting with modern UI and advanced features</em>
 </p>
 
@@ -145,19 +145,66 @@ sonarflex \
   --ejs-file="template.ejs"
 ```
 
-## Themes
+## 🎨 Themes & Visual Customization
 
-### Light Theme (Default)
+SonarFlex comes with built-in support for both light and dark themes, designed to optimize readability and reduce eye strain.
 
-- Clean, professional design
-- White background with dark text
+### Available Themes
+
+#### 🌞 Light Theme (Default)
+
+- Clean, professional appearance
+- White background (#f7f7f7) with dark text (#333)
+- High contrast for readability
 - Optimal for printing
+- Ideal for daytime use
 
-### Dark Theme
+![Light Theme](screenshots/light-theme.png)
 
-- Reduced eye strain in low-light environments
-- Dark background with light text
-- Automatically switches to light theme for printing
+#### 🌙 Dark Theme
+
+- Modern dark mode interface
+- Dark background (#1a1a1a) with light text (#e0e0e0)
+- Reduced eye strain for low-light environments
+- Enhanced link visibility with light blue accents
+- Automatically switches to light theme when printing
+
+![Dark Theme](screenshots/dark-theme.png)
+
+### Using Themes
+
+Enable dark theme via command line:
+
+```bash
+sonarflex --dark-theme [other options...]
+```
+
+Or in your configuration file:
+
+```json
+{
+  "theme": "dark"
+}
+```
+
+### Theme Features
+
+Both themes include:
+
+- Consistent color schemes
+- Clear visual hierarchy
+- Responsive design
+- High contrast severity indicators
+- Accessible link colors
+- Print-friendly formatting
+
+### Custom Styling
+
+Want to customize the look further? Use your own CSS:
+
+```bash
+sonarflex --stylesheet-file="path/to/custom.css"
+```
 
 ## 🔍 Debugging
 
