@@ -159,7 +159,7 @@ SonarFlex comes with built-in support for both light and dark themes, designed t
 - Optimal for printing
 - Ideal for daytime use
 
-![Light Theme](screenshots/light-theme.png)
+![Light Theme](screenshots/light_theme.png)
 
 #### 🌙 Dark Theme
 
@@ -169,7 +169,7 @@ SonarFlex comes with built-in support for both light and dark themes, designed t
 - Enhanced link visibility with light blue accents
 - Automatically switches to light theme when printing
 
-![Dark Theme](screenshots/dark-theme.png)
+![Dark Theme](screenshots/dark_theme.png)
 
 ### Using Themes
 
