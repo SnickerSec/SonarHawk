@@ -4,7 +4,7 @@
 
 ### Added
 
-- Initial release of SonarFlex
+- Initial release of SonarHawk
 - Support for SonarQube up to version 10.x
 - Modern UI with light and dark themes
 - PDF export functionality

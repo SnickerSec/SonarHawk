@@ -1,5 +1,5 @@
 {
-  "name": "sonarflex",
+  "name": "sonarhawk",
   "version": "1.0.0",
   "description": "SonarQube reporting tool for improved code analysis",
   "main": "index.js",
@@ -15,7 +15,7 @@
     "analysis"
   ],
   "bin": {
-    "sonarflex": "./cli.js"
+    "sonarhawk": "./cli.js"
   },
   "exports": "./index.js",
   "scripts": {

@@ -1,4 +1,4 @@
-# 📊 SonarFlex
+# 📊 SonarHawk
 
 > An enhanced fork of [sonar-report](https://github.com/soprasteria/sonar-report) that provides modern vulnerability reporting for SonarQube.
 
