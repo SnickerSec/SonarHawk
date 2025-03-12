@@ -28,7 +28,7 @@
     "ejs": "^3.1.10",
     "got": "^14.4.5",
     "hpagent": "^1.2.0",
-    "properties-file": "^3.5.4",
+    "properties-file": "^3.5.11",
     "proxy-from-env": "^1.1.0",
     "semver": "^7.6.0"
   },
