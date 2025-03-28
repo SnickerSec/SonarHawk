@@ -4,9 +4,6 @@
 
 ![Version](https://img.shields.io/github/v/release/SnickerSec/sonarhawk)
 ![License](https://img.shields.io/github/license/SnickerSec/sonarhawk)
-![Node Version](https://img.shields.io/node/v/sonarhawk)
-![Dependencies](https://img.shields.io/librariesio/release/npm/sonarhawk)
-![Build Status](https://img.shields.io/github/actions/workflow/status/SnickerSec/sonarhawk/main.yml)
 
 <p align="center">
   <img src="screenshots/dark_theme.png" alt="SonarHawk Report Example" width="800"/>
