@@ -1,0 +1,23 @@
+name: Version Check
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "package.json"
+      - "CHANGELOG.md"
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check version updates
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          if ! grep -q "## \[$PKG_VERSION\]" CHANGELOG.md; then
+            echo "Error: Version $PKG_VERSION not found in CHANGELOG.md"
+            exit 1
+          fi
