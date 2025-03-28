@@ -1,5 +1,8 @@
 name: Create Release
 
+permissions:
+  contents: write
+
 on:
   push:
     branches:
@@ -12,13 +15,14 @@ jobs:
   debug-trigger:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - name: Debug Event
         run: |
           echo "Event name: ${{ github.event_name }}"
           echo "Ref name: ${{ github.ref }}"
-          echo "Base ref: ${{ github.base_ref }}"
-          echo "Head ref: ${{ github.head_ref }}"
-          echo "Repository: ${{ github.repository }}"
+          echo "Changed files:"
+          git diff --name-only ${{ github.event.before }} ${{ github.event.after }}
 
   create-release:
     needs: debug-trigger

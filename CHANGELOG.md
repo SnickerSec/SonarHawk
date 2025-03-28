@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.1.1] - 2025-03-28
+## [1.1.1] - 2025-03-27
 
 ### Security
 
@@ -13,7 +13,7 @@
 - Enhanced error handling for network requests
 - Fixed branch name validation in version check workflow
 
-## [1.1.0] - 2025-03-28
+## [1.1.0] - 2025-03-27
 
 ### Changed
 
