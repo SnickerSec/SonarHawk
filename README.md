@@ -1,43 +1,59 @@
 # 📊 SonarHawk
 
-> An enhanced fork of [sonar-report](https://github.com/soprasteria/sonar-report) that provides modern vulnerability reporting for SonarQube.
+> Modern vulnerability reporting for SonarQube with enhanced features and dark mode support.
 
 ![Version](https://img.shields.io/github/v/release/SnickerSec/sonarhawk)
 ![License](https://img.shields.io/github/license/SnickerSec/sonarhawk)
+![Node Version](https://img.shields.io/node/v/sonarhawk)
+![Dependencies](https://img.shields.io/librariesio/release/npm/sonarhawk)
+![Build Status](https://img.shields.io/github/actions/workflow/status/SnickerSec/sonarhawk/main.yml)
 
 <p align="center">
-  <img src="screenshots/dark_theme.png" alt="SonarHawk Report Example" width="800"><br/>
-  <em>Enhanced vulnerability reporting with modern UI and advanced features</em>
+  <img src="screenshots/dark_theme.png" alt="SonarHawk Report Example" width="800"/>
 </p>
 
-## Key Features Over sonar-report
+## ✨ Highlights
 
-| Feature           | sonar-report | SonarHawk  |
-| ----------------- | ------------ | ---------- |
-| SonarQube Support | ≤ 7.9        | Up to 10.x |
-| PDF Export        | ❌           | ✅         |
-| Modern UI         | Basic        | Enhanced   |
-| Quality Gates     | Basic        | Detailed   |
-| Issue Tracking    | Basic        | Enhanced   |
-| Hotspot Support   | Limited      | Full       |
-| Delta Analysis    | Limited      | Full       |
-| Debug Mode        | ❌           | ✅         |
-| Proxy Support     | Basic        | Advanced   |
-| Custom Templates  | Basic        | Full EJS   |
-| Dark Theme        | ❌           | ✅         |
+- 🌙 Dark theme by default (light theme available)
+- 📱 Responsive modern UI design
+- 🔒 Full security hotspot support
+- 📊 Enhanced quality gates reporting
+- 📄 PDF export functionality
+- 🔄 Delta analysis capabilities
+- 🌐 Advanced proxy support
+- 🐛 Debug mode for troubleshooting
 
-## Quick Start
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js >= 14.x
+- SonarQube instance (v7.9 - v10.x)
+- SonarQube access token
+
+### Installation
 
 ```bash
-# Installation
 npm install -g sonarhawk
+```
 
-# Basic Usage
+### Basic Usage
+
+```bash
+# Generate a report with default settings (dark theme)
 sonarhawk \
   --sonarurl="https://sonar.company.com" \
   --sonarcomponent="project-key" \
   --sonartoken="your-token" \
   --output="report.html"
+
+# Generate a report with light theme
+sonarhawk \
+  --sonarurl="https://sonar.company.com" \
+  --sonarcomponent="project-key" \
+  --sonartoken="your-token" \
+  --output="report.html" \
+  --light-theme
 ```
 
 ## 📖 Documentation
@@ -141,81 +157,113 @@ sonarhawk \
   --ejs-file="template.ejs"
 ```
 
-## 🎨 Themes & Visual Customization
+## 🎨 Themes
 
-SonarHawk comes with built-in support for both light and dark themes, designed to optimize readability and reduce eye strain.
+### Dark Theme (Default)
 
-### Available Themes
+The dark theme is enabled by default for better readability and reduced eye strain.
 
-#### 🌞 Light Theme (Default)
+<details>
+<summary>Dark Theme Features</summary>
 
-- Clean, professional appearance
-- White background (#f7f7f7) with dark text (#333)
-- High contrast for readability
-- Optimal for printing
-- Ideal for daytime use
+- Dark background (#1a1a1a)
+- Light text (#e0e0e0)
+- Blue accent colors
+- Enhanced contrast for code blocks
+- Automatic light theme switching for printing
 
-![Light Theme](screenshots/light_theme.png)
+</details>
 
-#### 🌙 Dark Theme
+### Light Theme
 
-- Modern dark mode interface
-- Dark background (#1a1a1a) with light text (#e0e0e0)
-- Reduced eye strain for low-light environments
-- Enhanced link visibility with light blue accents
-- Automatically switches to light theme when printing
+Use `--light-theme` to enable the light theme.
 
-![Dark Theme](screenshots/dark_theme.png)
+<details>
+<summary>Light Theme Features</summary>
 
-### Using Themes
+- Light background (#f7f7f7)
+- Dark text (#333333)
+- Clean, minimal design
+- Print-optimized colors
+- High contrast for accessibility
 
-Enable dark theme via command line:
+</details>
+
+## 📋 Examples
+
+### Generate a Full Report
 
 ```bash
-sonarhawk --dark-theme [other options...]
+sonarhawk \
+  --sonarurl="https://sonar.company.com" \
+  --sonarcomponent="project-key" \
+  --sonartoken="your-token" \
+  --output="full-report.html" \
+  --quality-gate-status \
+  --coverage \
+  --link-issues
 ```
 
-Or in your configuration file:
+### Delta Analysis Report
 
-```json
-{
-  "theme": "dark"
-}
+```bash
+sonarhawk \
+  --sonarurl="https://sonar.company.com" \
+  --sonarcomponent="project-key" \
+  --sonartoken="your-token" \
+  --output="delta-report.html" \
+  --in-new-code-period \
+  --branch="feature/new-auth"
 ```
-
-### Theme Features
-
-Both themes include:
-
-- Consistent color schemes
-- Clear visual hierarchy
-- Responsive design
-- High contrast severity indicators
-- Accessible link colors
-- Print-friendly formatting
 
 ### Custom Styling
 
-Want to customize the look further? Use your own CSS:
-
 ```bash
-sonarhawk --stylesheet-file="path/to/custom.css"
+sonarhawk \
+  --sonarurl="https://sonar.company.com" \
+  --sonarcomponent="project-key" \
+  --stylesheet-file="custom.css" \
+  --ejs-file="custom-template.ejs"
 ```
 
-## 🔍 Debugging
+## 🔧 Troubleshooting
 
-Enable detailed logging:
+### Common Issues
+
+1. **Authentication Failed**
+
+   ```bash
+   # Verify your token
+   sonarhawk --debug --sonartoken="your-token" ...
+   ```
+
+2. **Proxy Issues**
+
+   ```bash
+   # Use explicit proxy configuration
+   sonarhawk --http-proxy="http://proxy.company.com:8080" ...
+   ```
+
+3. **Version Compatibility**
+   ```bash
+   # Check SonarQube version
+   sonarhawk --debug ...
+   ```
+
+### Debug Mode
+
+Enable verbose logging:
 
 ```bash
-sonarhawk --debug
+sonarhawk --debug --output="report.html" ...
 ```
 
-Debug output includes:
+## 📖 Additional Resources
 
-- API requests/responses
-- Authentication process
-- Template rendering
-- File operations
+- [Changelog](CHANGELOG.md)
+- [SonarQube API Documentation](https://docs.sonarqube.org/latest/extend/web-api/)
+- [Report Templates](docs/templates.md)
+- [Contributing Guidelines](CONTRIBUTING.md)
 
 ## 🤝 Contributing
 
@@ -237,4 +285,7 @@ MIT License - see [LICENSE](LICENSE) for details
 
 ---
 
-<p align="center">Made with ❤️ by the SonarHawk Team</p>
+<p align="center">
+  <sub>Built with ❤️ by the SonarHawk Team</sub><br>
+  <sub>MIT License | Copyright © 2024</sub>
+</p>

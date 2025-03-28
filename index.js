@@ -9,6 +9,8 @@ import { getProperties } from "properties-file";
 import semver from "semver";
 import { readFileSync, existsSync } from "node:fs";
 import { getProxyForUrl } from 'proxy-from-env';
+import Bottleneck from 'bottleneck';
+import QuickLRU from 'quick-lru';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -16,6 +18,30 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const PAGE_SIZE = 500;
 const MAX_RESULTS = 10000;
 const MAX_PAGE = MAX_RESULTS / PAGE_SIZE;
+const CACHE_MAX_SIZE = 1000;
+const CACHE_MAX_AGE = 1000 * 60 * 5; // 5 minutes
+
+// Rate limiter
+const limiter = new Bottleneck({
+  maxConcurrent: 5,
+  minTime: 100 // minimum time between requests
+});
+
+// Cache initialization
+const cache = new QuickLRU({
+  maxSize: CACHE_MAX_SIZE,
+  maxAge: CACHE_MAX_AGE
+});
+
+// Type validation
+const validateOptions = (options) => {
+  const required = ['sonarurl', 'sonarcomponent'];
+  for (const field of required) {
+    if (!options[field]) {
+      throw new Error(`Missing required option: ${field}`);
+    }
+  }
+};
 
 const SEVERITY_WEIGHTS = {
   MINOR: 0,
@@ -121,6 +147,17 @@ class SonarClient {
     this.headers = {}; // Initialize headers property
     this.agent = this.setupProxy();
 
+    // Add retry config
+    this.retryConfig = {
+      limit: 3,
+      methods: ['GET', 'POST'],
+      statusCodes: [408, 429, 500, 502, 503, 504],
+      maxRetryAfter: 10000
+    };
+
+    // Add logging
+    this.logger = options.logger || console;
+
     this.debugLog(`Initialized SonarClient with URL: ${this.baseURL}`);
     if (this.token) {
       this.debugLog('Using token authentication');
@@ -147,7 +184,7 @@ class SonarClient {
    * @private
    */
   setupProxy() {
-    const proxy = getProxyForUrl(this.baseUrl);
+    const proxy = getProxyForUrl(this.baseURL);
     if (!proxy) {
       this.debugLog("No proxy configuration detected");
       return null;
@@ -211,6 +248,22 @@ class SonarClient {
    * @returns {Promise<Object>} - Response data
    */
   async get(endpoint, options = {}) {
+    const normalizeOptions = (obj) => {
+      return Object.keys(obj)
+        .sort((a, b) => a.localeCompare(b))
+        .reduce((acc, key) => {
+          acc[key] = obj[key];
+          return acc;
+        }, {});
+    };
+    
+    const cacheKey = `${endpoint}${JSON.stringify(normalizeOptions(options))}`;
+    
+    if (cache.has(cacheKey)) {
+      this.debugLog('Cache hit for:', endpoint);
+      return cache.get(cacheKey);
+    }
+
     try {
       const url = this._joinUrl(this.baseURL, endpoint);
       this.debugLog(`GET Request to: ${url}`);
@@ -218,10 +271,7 @@ class SonarClient {
       const requestOptions = {
         headers: this._getHeaders(),
         responseType: 'json',
-        retry: {
-          limit: 2,
-          methods: ['GET']
-        },
+        retry: this.retryConfig,
         timeout: {
           request: 30000 // 30 seconds timeout
         },
@@ -232,21 +282,14 @@ class SonarClient {
         requestOptions.agent = this.agent;
       }
 
-      const response = await got.get(url, requestOptions);
+      const response = await limiter.schedule(() => 
+        got.get(url, requestOptions)
+      );
+
+      cache.set(cacheKey, response.body);
       return response.body;
     } catch (error) {
-      this.debugLog(`GET Request failed: ${error.message}`);
-      if (error.response) {
-        this.debugLog(`Status Code: ${error.response.statusCode}`);
-        this.debugLog(`Response Body: ${JSON.stringify(error.response.body, null, 2)}`);
-        throw new SonarApiError(`GET request failed: ${error.response.statusCode} ${error.response.statusMessage}`, error.response);
-      } else {
-        this.debugLog(`Network Error: ${error.code || error.message}`);
-        throw new SonarApiError(`Network error: ${error.code || error.message}`, {
-          statusCode: 0,
-          body: { error: error.message }
-        });
-      }
+      this._handleError(error, 'GET');
     }
   }
 
@@ -264,10 +307,7 @@ class SonarClient {
       const requestOptions = {
         headers: this._getHeaders(),
         responseType: 'json',
-        retry: {
-          limit: 2,
-          methods: ['POST']
-        },
+        retry: this.retryConfig,
         timeout: {
           request: 30000
         },
@@ -281,18 +321,7 @@ class SonarClient {
       const response = await got.post(url, requestOptions);
       return response.body;
     } catch (error) {
-      this.debugLog(`POST Request failed: ${error.message}`);
-      if (error.response) {
-        this.debugLog(`Status Code: ${error.response.statusCode}`);
-        this.debugLog(`Response Body: ${JSON.stringify(error.response.body, null, 2)}`);
-        throw new SonarApiError(`POST request failed: ${error.response.statusCode} ${error.response.statusMessage}`, error.response);
-      } else {
-        this.debugLog(`Network Error: ${error.code || error.message}`);
-        throw new SonarApiError(`Network error: ${error.code || error.message}`, {
-          statusCode: 0,
-          body: { error: error.message }
-        });
-      }
+      this._handleError(error, 'POST');
     }
   }
 
@@ -333,6 +362,27 @@ class SonarClient {
     } while (nbResults === pageSize);
 
     return results;
+  }
+
+  _handleError(error, method) {
+    this.logger.error(`${method} Request failed:`, {
+      message: error.message,
+      code: error.code,
+      statusCode: error.response?.statusCode,
+      url: error.response?.url
+    });
+
+    if (error.response) {
+      throw new SonarApiError(
+        `${method} request failed: ${error.response.statusCode} ${error.response.statusMessage}`,
+        error.response
+      );
+    } else {
+      throw new SonarApiError(`Network error: ${error.code || error.message}`, {
+        statusCode: 0,
+        body: { error: error.message }
+      });
+    }
   }
 }
 
@@ -705,11 +755,13 @@ async function generateOutput(data, options) {
     console.error("using stylesheet file: %s", stylesheetFile);
 
     // Try to use provided template first, then fall back to default index.ejs
-    const templateFile = options.ejsFile ? 
-      (existsSync(resolve(__dirname, options.ejsFile)) ? 
-        resolve(__dirname, options.ejsFile) : 
-        resolve(options.ejsFile)) :
-      resolve(__dirname, "index.ejs");
+    let templateFile;
+    if (options.ejsFile) {
+      const localPath = resolve(__dirname, options.ejsFile);
+      templateFile = existsSync(localPath) ? localPath : resolve(options.ejsFile);
+    } else {
+      templateFile = resolve(__dirname, "index.ejs");
+    }
 
     console.error("using template file: %s", templateFile);
 
@@ -719,7 +771,7 @@ async function generateOutput(data, options) {
 
     const renderedFile = await ejs.renderFile(
       templateFile,
-      { ...data, stylesheet, darkTheme: options.darkTheme },
+      { ...data, stylesheet, darkTheme: !options.lightTheme }, // Dark theme is default
       {}
     );
     
@@ -841,6 +893,10 @@ const buildCommand = () => {
       "--dark-theme",
       "Enable dark theme for the report"
     )
+    .option(
+      "--light-theme",
+      "Enable light theme for the report (dark theme is default)"
+    )
         .addHelpText(
           "after",
           `
@@ -860,5 +916,6 @@ export {
   generateReport,
   SonarClient,
   SonarApiError,
-  collectors // Export collectors for testing
+  collectors, // Export collectors for testing
+  validateOptions // Export validation
 };

@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.1.0] - 2024-02-21
+
+### Changed
+
+- Dark theme is now the default theme
+- Theme selection via `--light-theme` flag
+- Improved HTML report template contrast and accessibility
+- Enhanced PDF export styling
+
+### Added
+
+- Automated GitHub release workflow
+- Version sync check for PRs
+- Release template for consistent releases
+- Additional debug logging for theme detection
+
 ## [1.0.0] - 2024-02-19
 
 ### Added
