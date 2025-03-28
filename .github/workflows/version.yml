@@ -3,7 +3,7 @@ name: Version Check
 on:
   pull_request:
     branches:
-      - main
+      - master
     paths:
       - "package.json"
       - "CHANGELOG.md"
