@@ -17,6 +17,14 @@ jobs:
       - name: Check version updates
         run: |
           PKG_VERSION=$(node -p "require('./package.json').version")
+          BRANCH_NAME=${GITHUB_HEAD_REF#refs/heads/}
+          EXPECTED_BRANCH="release/v${PKG_VERSION}"
+
+          if [[ "$BRANCH_NAME" != "$EXPECTED_BRANCH" ]]; then
+            echo "Error: Branch name should be '$EXPECTED_BRANCH' for version $PKG_VERSION"
+            exit 1
+          fi
+
           if ! grep -q "## \[$PKG_VERSION\]" CHANGELOG.md; then
             echo "Error: Version $PKG_VERSION not found in CHANGELOG.md"
             exit 1
