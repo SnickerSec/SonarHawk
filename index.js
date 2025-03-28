@@ -184,7 +184,7 @@ class SonarClient {
    * @private
    */
   setupProxy() {
-    const proxy = getProxyForUrl(this.baseUrl);
+    const proxy = getProxyForUrl(this.baseURL);
     if (!proxy) {
       this.debugLog("No proxy configuration detected");
       return null;
@@ -248,7 +248,16 @@ class SonarClient {
    * @returns {Promise<Object>} - Response data
    */
   async get(endpoint, options = {}) {
-    const cacheKey = `${endpoint}${JSON.stringify(options)}`;
+    const normalizeOptions = (obj) => {
+      return Object.keys(obj)
+        .sort((a, b) => a.localeCompare(b))
+        .reduce((acc, key) => {
+          acc[key] = obj[key];
+          return acc;
+        }, {});
+    };
+    
+    const cacheKey = `${endpoint}${JSON.stringify(normalizeOptions(options))}`;
     
     if (cache.has(cacheKey)) {
       this.debugLog('Cache hit for:', endpoint);
