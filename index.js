@@ -171,9 +171,9 @@ class SonarClient {
    * @private
    */
   _joinUrl(base, path) {
-    // Remove trailing slash from base and leading slash from path
-    const cleanBase = base.replace(/\/+$/, '');
-    const cleanPath = path.replace(/^\/+/, '');
+    // Safely trim slashes without regex
+    const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+    const cleanPath = path.startsWith('/') ? path.slice(1) : path;
     const url = `${cleanBase}/${cleanPath}`;
     this.debugLog(`Joining URLs - Base: ${cleanBase}, Path: ${cleanPath}, Result: ${url}`);
     return url;
