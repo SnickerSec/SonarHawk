@@ -21,6 +21,7 @@ tmp/
 *.swp
 *.swo
 .env
+.npmrc
 *.log
 
 # Keep only source files in version control

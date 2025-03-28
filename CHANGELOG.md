@@ -1,6 +1,19 @@
 # Changelog
 
-## [1.1.0] - 2024-02-21
+## [1.1.1] - 2025-03-28
+
+### Security
+
+- Fixed potential regex DOS vulnerability in URL handling
+- Added safe-regex package for improved security
+
+### Fixed
+
+- Improved caching implementation with normalized keys
+- Enhanced error handling for network requests
+- Fixed branch name validation in version check workflow
+
+## [1.1.0] - 2025-03-28
 
 ### Changed
 
