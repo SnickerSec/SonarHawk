@@ -16,13 +16,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Debug Event
         run: |
           echo "Event name: ${{ github.event_name }}"
           echo "Ref name: ${{ github.ref }}"
           echo "Changed files:"
-          git diff --name-only ${{ github.event.before }} ${{ github.event.after }}
+          git log -1 --name-only --pretty=format:""
 
   create-release:
     needs: debug-trigger

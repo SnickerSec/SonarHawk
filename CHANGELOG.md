@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.1.1] - 2025-03-27
+## [1.1.1] - 2025-03-28
 
 ### Security
 
@@ -13,7 +13,12 @@
 - Enhanced error handling for network requests
 - Fixed branch name validation in version check workflow
 
-## [1.1.0] - 2025-03-27
+### Changed
+
+- Updated repository URL and package metadata
+- Added keywords for better npm discoverability
+
+## [1.1.0] - 2025-03-28
 
 ### Changed
 
