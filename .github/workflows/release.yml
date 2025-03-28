@@ -9,12 +9,34 @@ on:
       - "CHANGELOG.md"
 
 jobs:
+  debug-trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Debug Event
+        run: |
+          echo "Event name: ${{ github.event_name }}"
+          echo "Ref name: ${{ github.ref }}"
+          echo "Base ref: ${{ github.base_ref }}"
+          echo "Head ref: ${{ github.head_ref }}"
+          echo "Repository: ${{ github.repository }}"
+
   create-release:
+    needs: debug-trigger
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.ref }}
+
+      - name: Debug Files
+        run: |
+          echo "Files in directory:"
+          ls -la
+          echo "Package.json version:"
+          cat package.json | grep version
+          echo "CHANGELOG.md content:"
+          cat CHANGELOG.md | head -n 10
 
       - name: Get version from package.json
         id: version
