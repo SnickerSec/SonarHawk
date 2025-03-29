@@ -129,6 +129,10 @@ sonarhawk --sonarurl=http://your.sonar.instance --sonarcomponent=your:project:ke
 - Secure token handling
 - Interactive configuration
 
+<p align="center">
+  <img src="screenshots/sonarhawk_web.png" alt="SonarHawk Web Interface" width="800"/>
+</p>
+
 ### Configuration
 
 ```bash
@@ -209,6 +213,10 @@ sonarhawk \
 
 The dark theme is enabled by default for better readability and reduced eye strain.
 
+<p align="center">
+  <img src="screenshots/dark_theme.png" alt="Dark Theme Example" width="800"/>
+</p>
+
 <details>
 <summary>Dark Theme Features</summary>
 
@@ -223,6 +231,10 @@ The dark theme is enabled by default for better readability and reduced eye stra
 ### Light Theme
 
 Use `--light-theme` to enable the light theme.
+
+<p align="center">
+  <img src="screenshots/light_theme.png" alt="Light Theme Example" width="800"/>
+</p>
 
 <details>
 <summary>Light Theme Features</summary>
@@ -335,4 +347,3 @@ MIT License - see [LICENSE](LICENSE) for details
   <sub>Built with ❤️ by the SonarHawk Team</sub><br>
   <sub>MIT License | Copyright © 2024</sub>
 </p>
-````
