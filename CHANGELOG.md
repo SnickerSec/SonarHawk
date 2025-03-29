@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.1.2] - 2025-03-28
+
+### Fixed
+
+- Web interface API connectivity issues
+- Dark theme synchronization between CLI and web interface
+- Temporary file cleanup in web server
+- CORS configuration for local development
+
+### Added
+
+- Health check endpoint for API server
+- Better error handling in web interface
+- Real-time report preview
+- API request logging
+
 ## [1.1.1] - 2025-03-28
 
 ### Security

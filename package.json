@@ -1,6 +1,6 @@
 {
   "name": "sonarhawk",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "SonarQube reporting tool with enhanced features and dark mode",
   "main": "index.js",
   "author": "SnickerSec",
@@ -28,6 +28,10 @@
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s"
   },
   "type": "module",
+  "private": true,
+  "workspaces": [
+    "web"
+  ],
   "dependencies": {
     "bottleneck": "^2.19.5",
     "commander": "^13.1.0",

@@ -19,6 +19,10 @@
 - 🔄 Delta analysis capabilities
 - 🌐 Advanced proxy support
 - 🐛 Debug mode for troubleshooting
+- 🌐 Web interface for report generation
+- 🎨 Modern React dashboard
+- 🔄 Real-time report preview
+- 🔐 Secure token handling
 
 ## 🚀 Quick Start
 
@@ -31,21 +35,41 @@
 ### Installation
 
 ```bash
-npm install -g sonarhawk
+# Clone the repository
+git clone https://github.com/snickersec/sonarhawk.git
+cd sonarhawk
+
+# Install dependencies
+npm install
+
+# Run the CLI
+node index.js --sonarurl="https://sonar.company.com" --sonarcomponent="project-key"
+```
+
+### Using the Web Interface
+
+```bash
+# Install and start both server and client
+cd web
+npm install
+npm run start
+
+# Access the web interface
+open http://localhost:5173
 ```
 
 ### Basic Usage
 
 ```bash
 # Generate a report with default settings (dark theme)
-sonarhawk \
+node index.js \
   --sonarurl="https://sonar.company.com" \
   --sonarcomponent="project-key" \
   --sonartoken="your-token" \
   --output="report.html"
 
 # Generate a report with light theme
-sonarhawk \
+node index.js \
   --sonarurl="https://sonar.company.com" \
   --sonarcomponent="project-key" \
   --sonartoken="your-token" \
@@ -59,16 +83,16 @@ sonarhawk \
 
 ```bash
 # Authentication (Token - Recommended)
-sonarhawk --sonartoken="your-token"
+node index.js --sonartoken="your-token"
 
 # Authentication (Username/Password)
-sonarhawk --sonarusername="user" --sonarpassword="pass"
+node index.js --sonarusername="user" --sonarpassword="pass"
 
 # Branch Analysis
-sonarhawk --branch="feature/new-auth"
+node index.js --branch="feature/new-auth"
 
 # Quality Gates
-sonarhawk --quality-gate-status --coverage
+node index.js --quality-gate-status --coverage
 ```
 
 ### Report Customization
@@ -92,6 +116,31 @@ Use the dark theme:
 
 ```bash
 sonarhawk --sonarurl=http://your.sonar.instance --sonarcomponent=your:project:key --output=report.html --dark-theme
+```
+
+## 🌐 Web Interface
+
+### Features
+
+- Modern React + Chakra UI dashboard
+- Dark mode by default
+- Form validation
+- Real-time report preview
+- Secure token handling
+- Interactive configuration
+
+### Configuration
+
+```bash
+# Start development server
+cd web
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
 ```
 
 ## 🔧 Configuration Options
@@ -286,3 +335,4 @@ MIT License - see [LICENSE](LICENSE) for details
   <sub>Built with ❤️ by the SonarHawk Team</sub><br>
   <sub>MIT License | Copyright © 2024</sub>
 </p>
+````

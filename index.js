@@ -754,7 +754,6 @@ async function generateOutput(data, options) {
     const stylesheet = await readFile(stylesheetFile, "binary");
     console.error("using stylesheet file: %s", stylesheetFile);
 
-    // Try to use provided template first, then fall back to default index.ejs
     let templateFile;
     if (options.ejsFile) {
       const localPath = resolve(__dirname, options.ejsFile);
@@ -771,7 +770,12 @@ async function generateOutput(data, options) {
 
     const renderedFile = await ejs.renderFile(
       templateFile,
-      { ...data, stylesheet, darkTheme: !options.lightTheme }, // Dark theme is default
+      { 
+        ...data, 
+        stylesheet,
+        lightTheme: options.lightTheme === true,
+        darkTheme: !options.lightTheme 
+      },
       {}
     );
     
