@@ -36,7 +36,7 @@
     "bottleneck": "^2.19.5",
     "commander": "^13.1.0",
     "ejs": "^3.1.10",
-    "got": "^14.4.5",
+    "got": "^14.4.7",
     "hpagent": "^1.2.0",
     "properties-file": "^3.5.11",
     "proxy-from-env": "^1.1.0",
