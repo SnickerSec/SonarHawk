@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@chakra-ui/react": "^2.8.2",
+    "@chakra-ui/react": "^3.23.0",
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.0",
     "cors": "^2.8.5",
