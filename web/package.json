@@ -35,6 +35,6 @@
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.1",
     "concurrently": "^9.1.2",
-    "vite": "^7.0.4"
+    "vite": "^7.0.6"
   }
 }
