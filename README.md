@@ -337,7 +337,6 @@ MIT License - see [LICENSE](LICENSE) for details
 
 ## 🙏 Acknowledgments
 
-- Original [sonar-report](https://github.com/soprasteria/sonar-report) team
 - [SonarQube](https://www.sonarqube.org/) team for their excellent API
 - Community contributors and users
 
