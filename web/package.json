@@ -30,7 +30,10 @@
     "build": "vite build",
     "preview": "vite preview",
     "server": "node --trace-warnings server.js",
-    "start": "concurrently -n \"server,client\" \"npm run server\" \"npm run dev\""
+    "start:dev": "concurrently -n \"server,client\" \"npm run server\" \"npm run dev\"",
+    "start": "NODE_ENV=production node server.js",
+    "railway:build": "npm install && npm run build",
+    "railway:start": "NODE_ENV=production node server.js"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.1",
