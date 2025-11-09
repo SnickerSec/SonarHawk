@@ -119,7 +119,7 @@ app.post('/api/generate', async (req, res) => {
 
 // Serve index.html for all other routes in production (SPA fallback)
 if (!isDev) {
-  app.get('*', (req, res) => {
+  app.use((req, res) => {
     res.sendFile(join(__dirname, 'dist', 'index.html'));
   });
 }
