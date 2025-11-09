@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import { dirname, resolve, join } from 'path';
 import { fileURLToPath } from 'url';
 import { readFile, unlink } from 'fs/promises';
@@ -21,14 +22,30 @@ if (isDev) {
     credentials: true
   }));
 } else {
-  // In production, allow the same origin
+  // In production, disable CORS for same-origin only
   app.use(cors({
-    origin: true,
+    origin: false,
     credentials: true
   }));
 }
 
+// Rate limiting configuration
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.'
+});
+
+const generateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // Limit report generation to 10 per 15 minutes
+  message: 'Too many report generation requests, please try again later.'
+});
+
 app.use(express.json({ limit: '10mb' }));
+
+// Apply rate limiting to all API routes
+app.use('/api/', apiLimiter);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -58,7 +75,7 @@ if (!isDev) {
 }
 
 // API endpoint for report generation
-app.post('/api/generate', async (req, res) => {
+app.post('/api/generate', generateLimiter, async (req, res) => {
   try {
     process.chdir(projectRoot);
 
