@@ -42,8 +42,19 @@ app.get('/api/health', (req, res) => {
 // Serve static files in production
 if (!isDev) {
   const distPath = join(__dirname, 'dist');
-  app.use(express.static(distPath));
-  console.log('Serving static files from:', distPath);
+  const { existsSync, readdirSync } = await import('fs');
+
+  console.log('Dist path:', distPath);
+  console.log('Dist exists:', existsSync(distPath));
+
+  if (existsSync(distPath)) {
+    const files = readdirSync(distPath);
+    console.log('Files in dist:', files);
+    app.use(express.static(distPath));
+    console.log('Serving static files from:', distPath);
+  } else {
+    console.error('ERROR: dist directory does not exist! Build may have failed.');
+  }
 }
 
 // API endpoint for report generation

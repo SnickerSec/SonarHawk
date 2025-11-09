@@ -3,14 +3,12 @@ nixPkgs = ["nodejs_20"]
 
 [phases.install]
 cmds = [
-  "npm install --workspace=web",
-  "cd web && npm install"
+  "npm install --include=dev",
+  "npm install --workspace=web"
 ]
 
 [phases.build]
-cmds = [
-  "cd web && npm run build"
-]
+cmds = ["npm run build --workspace=web"]
 
 [start]
 cmd = "cd web && NODE_ENV=production node server.js"
