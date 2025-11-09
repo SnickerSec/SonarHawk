@@ -4,7 +4,7 @@ nixPkgs = ["nodejs_20"]
 [phases.install]
 cmds = [
   "npm install --include=dev",
-  "npm install --workspace=web"
+  "npm install --workspace=web --include=dev"
 ]
 
 [phases.build]
