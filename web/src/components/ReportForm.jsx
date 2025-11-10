@@ -24,10 +24,21 @@ import {
   FormErrorMessage,
   Spinner,
   Badge,
-  useToast
+  useToast,
+  Tooltip,
+  Kbd,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  ModalCloseButton,
+  useDisclosure
 } from '@chakra-ui/react'
 import { useForm } from 'react-hook-form'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { addToReportHistory } from './ReportHistory'
 
 export function ReportForm() {
   const { register, handleSubmit, watch, formState: { errors } } = useForm({
@@ -40,6 +51,25 @@ export function ReportForm() {
   const [isTesting, setIsTesting] = useState(false)
   const [connectionStatus, setConnectionStatus] = useState(null)
   const [generatingStep, setGeneratingStep] = useState('')
+  const [previewHtml, setPreviewHtml] = useState('')
+  const [reportBlob, setReportBlob] = useState(null)
+  const [reportData, setReportData] = useState(null)
+  const { isOpen, onOpen, onClose } = useDisclosure()
+
+  // Keyboard shortcuts: Ctrl+Enter (or Cmd+Enter on Mac) to submit
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+        event.preventDefault()
+        if (!isGenerating && !isTesting) {
+          handleSubmit(onSubmit)()
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isGenerating, isTesting, handleSubmit])
 
   // Test connection function
   const testConnection = async () => {
@@ -160,16 +190,23 @@ export function ReportForm() {
       setGeneratingStep('Generating report...')
       const blob = await response.blob()
 
-      setGeneratingStep('Downloading...')
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = 'sonarhawk-report.html'
-      a.click()
+      // Store report for preview/download
+      setReportBlob(blob)
+      setReportData(cleanData)
+
+      // Read first part of HTML for preview
+      const text = await blob.text()
+      setPreviewHtml(text.substring(0, 5000)) // First 5000 chars for preview
+
+      // Add to report history
+      addToReportHistory(cleanData)
+
+      // Show preview modal
+      onOpen()
 
       toast({
         title: 'Report Generated',
-        description: 'Your report has been downloaded successfully',
+        description: 'Preview your report or download it',
         status: 'success',
         duration: 3000
       })
@@ -188,6 +225,32 @@ export function ReportForm() {
     }
   }
 
+  const downloadReport = () => {
+    if (reportBlob) {
+      const url = window.URL.createObjectURL(reportBlob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'sonarhawk-report.html'
+      a.click()
+      window.URL.revokeObjectURL(url)
+      onClose()
+
+      toast({
+        title: 'Downloaded',
+        description: 'Report saved to your downloads',
+        status: 'success',
+        duration: 2000
+      })
+    }
+  }
+
+  const openInNewTab = () => {
+    if (reportBlob) {
+      const url = window.URL.createObjectURL(reportBlob)
+      window.open(url, '_blank')
+    }
+  }
+
   return (
     <Box as="form" onSubmit={handleSubmit(onSubmit)} width="100%" maxW="800px">
       <VStack spacing={6} align="stretch">
@@ -197,7 +260,13 @@ export function ReportForm() {
           <Heading size="md" mb={4}>Required Configuration</Heading>
           <VStack spacing={4}>
             <FormControl isRequired isInvalid={errors.sonarurl}>
-              <FormLabel>SonarQube URL</FormLabel>
+              <Tooltip
+                label="The base URL of your SonarQube or SonarCloud instance"
+                placement="top-start"
+                hasArrow
+              >
+                <FormLabel cursor="help">SonarQube URL</FormLabel>
+              </Tooltip>
               <Input
                 {...register('sonarurl', {
                   required: 'SonarQube URL is required',
@@ -215,7 +284,13 @@ export function ReportForm() {
             </FormControl>
 
             <FormControl isRequired isInvalid={errors.sonarcomponent}>
-              <FormLabel>Project Key / Component</FormLabel>
+              <Tooltip
+                label="The unique identifier for your project in SonarQube (found in project settings)"
+                placement="top-start"
+                hasArrow
+              >
+                <FormLabel cursor="help">Project Key / Component</FormLabel>
+              </Tooltip>
               <Input
                 {...register('sonarcomponent', {
                   required: 'Project key is required',
@@ -284,7 +359,13 @@ export function ReportForm() {
             <AccordionPanel pb={4}>
               <VStack spacing={4}>
                 <FormControl>
-                  <FormLabel>Auth Token (Recommended)</FormLabel>
+                  <Tooltip
+                    label="Generate a token in SonarQube: User > My Account > Security > Generate Tokens"
+                    placement="top-start"
+                    hasArrow
+                  >
+                    <FormLabel cursor="help">Auth Token (Recommended)</FormLabel>
+                  </Tooltip>
                   <Input
                     type="password"
                     {...register('sonartoken')}
@@ -401,9 +482,15 @@ export function ReportForm() {
                 </FormControl>
 
                 <FormControl display="flex" alignItems="center">
-                  <FormLabel mb="0" flex="1">
-                    New Code Period Only
-                  </FormLabel>
+                  <Tooltip
+                    label="Only show issues introduced in the new code period defined in SonarQube"
+                    placement="top-start"
+                    hasArrow
+                  >
+                    <FormLabel mb="0" flex="1" cursor="help">
+                      New Code Period Only
+                    </FormLabel>
+                  </Tooltip>
                   <Switch {...register('inNewCodePeriod')} />
                 </FormControl>
                 <Text fontSize="sm" color="gray.500" mt={-2}>
@@ -580,18 +667,81 @@ export function ReportForm() {
           </Box>
         )}
 
-        <Button
-          type="submit"
-          colorScheme="blue"
-          size="lg"
-          width="100%"
-          isLoading={isGenerating}
-          loadingText={generatingStep || 'Generating...'}
-          isDisabled={isGenerating || isTesting}
+        <Tooltip
+          label={
+            <HStack spacing={1}>
+              <Text>Press</Text>
+              <Kbd>Ctrl</Kbd>
+              <Text>+</Text>
+              <Kbd>Enter</Kbd>
+              <Text>to generate</Text>
+            </HStack>
+          }
+          placement="top"
         >
-          Generate Report
-        </Button>
+          <Button
+            type="submit"
+            colorScheme="blue"
+            size="lg"
+            width="100%"
+            isLoading={isGenerating}
+            loadingText={generatingStep || 'Generating...'}
+            isDisabled={isGenerating || isTesting}
+          >
+            Generate Report
+          </Button>
+        </Tooltip>
       </VStack>
+
+      {/* Preview Modal */}
+      <Modal isOpen={isOpen} onClose={onClose} size="6xl">
+        <ModalOverlay />
+        <ModalContent maxH="90vh">
+          <ModalHeader>Report Preview</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody overflowY="auto">
+            <VStack spacing={4} align="stretch">
+              <Alert status="info">
+                <AlertIcon />
+                <Text fontSize="sm">
+                  This is a preview of your generated report. You can download it or open it in a new tab to view the full interactive version.
+                </Text>
+              </Alert>
+
+              <Box
+                p={4}
+                borderWidth="1px"
+                borderRadius="md"
+                bg="gray.50"
+                maxH="500px"
+                overflowY="auto"
+              >
+                <Text fontSize="xs" fontFamily="monospace" whiteSpace="pre-wrap">
+                  {previewHtml}
+                </Text>
+                {previewHtml.length >= 5000 && (
+                  <Text fontSize="xs" color="gray.500" mt={2}>
+                    ... (Preview truncated. Open in new tab to see full report)
+                  </Text>
+                )}
+              </Box>
+            </VStack>
+          </ModalBody>
+          <ModalFooter>
+            <HStack spacing={3}>
+              <Button variant="ghost" onClick={onClose}>
+                Close
+              </Button>
+              <Button colorScheme="blue" variant="outline" onClick={openInNewTab}>
+                Open in New Tab
+              </Button>
+              <Button colorScheme="blue" onClick={downloadReport}>
+                Download Report
+              </Button>
+            </HStack>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   )
 }
