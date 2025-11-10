@@ -54,16 +54,23 @@ export function ReportForm() {
   const [isTesting, setIsTesting] = useState(false)
   const [connectionStatus, setConnectionStatus] = useState(null)
   const [reachabilityStatus, setReachabilityStatus] = useState(null)
+  const [authStatus, setAuthStatus] = useState(null)
+  const [projectStatus, setProjectStatus] = useState(null)
   const [generatingStep, setGeneratingStep] = useState('')
   const [previewHtml, setPreviewHtml] = useState('')
   const [reportBlob, setReportBlob] = useState(null)
   const [reportData, setReportData] = useState(null)
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [isCheckingReachability, setIsCheckingReachability] = useState(false)
+  const [isCheckingAuth, setIsCheckingAuth] = useState(false)
+  const [isCheckingProject, setIsCheckingProject] = useState(false)
 
   // Watch SonarQube URL for dynamic token link
   const sonarUrl = watch('sonarurl')
   const sonarComponent = watch('sonarcomponent')
+  const sonarToken = watch('sonartoken')
+  const sonarUsername = watch('sonarusername')
+  const sonarPassword = watch('sonarpassword')
 
   // Generate full URL from input (adds https:// if not present)
   const getFullUrl = (url) => {
@@ -142,6 +149,124 @@ export function ReportForm() {
     }
   }
 
+  // Validate authentication credentials
+  const validateAuth = async () => {
+    if (!sonarUrl) return
+
+    const hasAuth = sonarToken || (sonarUsername && sonarPassword)
+    if (!hasAuth) {
+      setAuthStatus(null)
+      return
+    }
+
+    setIsCheckingAuth(true)
+    setAuthStatus(null)
+
+    try {
+      const apiUrl = import.meta.env.PROD
+        ? '/api/test-connection'
+        : 'http://localhost:3000/api/test-connection'
+
+      const testUrl = getFullUrl(sonarUrl)
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sonarurl: testUrl,
+          sonarcomponent: 'test', // Dummy for auth check
+          sonartoken: sonarToken,
+          sonarusername: sonarUsername,
+          sonarpassword: sonarPassword
+        })
+      })
+
+      const result = await response.json()
+
+      // Check if auth succeeded
+      if (result.success || (result.error && !result.error.includes('Authentication') && !result.error.includes('credentials'))) {
+        setAuthStatus({
+          valid: true
+        })
+      } else if (result.error && (result.error.includes('Authentication') || result.error.includes('credentials'))) {
+        setAuthStatus({
+          valid: false,
+          error: result.error
+        })
+      }
+    } catch (error) {
+      setAuthStatus({
+        valid: false,
+        error: 'Unable to validate credentials'
+      })
+    } finally {
+      setIsCheckingAuth(false)
+    }
+  }
+
+  // Validate project key
+  const validateProject = async () => {
+    if (!sonarUrl || !sonarComponent) {
+      setProjectStatus(null)
+      return
+    }
+
+    setIsCheckingProject(true)
+    setProjectStatus(null)
+
+    try {
+      const apiUrl = import.meta.env.PROD
+        ? '/api/test-connection'
+        : 'http://localhost:3000/api/test-connection'
+
+      const testUrl = getFullUrl(sonarUrl)
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sonarurl: testUrl,
+          sonarcomponent: sonarComponent,
+          sonartoken: sonarToken,
+          sonarusername: sonarUsername,
+          sonarpassword: sonarPassword
+        })
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setProjectStatus({
+          valid: true,
+          version: result.server?.version
+        })
+        // Also update connection status
+        setConnectionStatus({
+          success: true,
+          message: result.message,
+          server: result.server
+        })
+      } else if (result.error && result.error.includes('not found')) {
+        setProjectStatus({
+          valid: false,
+          error: 'Project not found'
+        })
+      } else if (result.error && result.error.includes('Access denied')) {
+        setProjectStatus({
+          valid: false,
+          error: 'Access denied to project'
+        })
+      }
+    } catch (error) {
+      setProjectStatus({
+        valid: false,
+        error: 'Unable to validate project'
+      })
+    } finally {
+      setIsCheckingProject(false)
+    }
+  }
+
   // Auto-check reachability when URL changes (doesn't need project key)
   useEffect(() => {
     // Need at least a domain name
@@ -160,24 +285,46 @@ export function ReportForm() {
     return () => clearTimeout(timeoutId)
   }, [sonarUrl])
 
-  // Auto-test full connectivity when URL + Component are both present
+  // Auto-check auth when credentials change
   useEffect(() => {
-    // Need both URL and component for full test
-    if (!sonarUrl || !sonarComponent) {
-      setConnectionStatus(null)
+    // Need URL and credentials
+    if (!sonarUrl || (!sonarToken && !(sonarUsername && sonarPassword))) {
+      setAuthStatus(null)
       return
     }
 
-    // Debounce the connectivity test
+    // Only check if server is reachable
+    if (!reachabilityStatus?.reachable) return
+
     const timeoutId = setTimeout(() => {
-      // Only auto-test if we have both URL and component
-      if (sonarUrl && sonarComponent && !isTesting && !isGenerating) {
-        testConnection()
+      if (!isCheckingAuth && !isTesting && !isGenerating) {
+        validateAuth()
       }
-    }, 1000) // Wait 1 second after user stops typing
+    }, 1000)
 
     return () => clearTimeout(timeoutId)
-  }, [sonarUrl, sonarComponent])
+  }, [sonarUrl, sonarToken, sonarUsername, sonarPassword, reachabilityStatus])
+
+  // Auto-check project when component changes
+  useEffect(() => {
+    // Need both URL and component
+    if (!sonarUrl || !sonarComponent) {
+      setProjectStatus(null)
+      return
+    }
+
+    // Only check if server is reachable
+    if (!reachabilityStatus?.reachable) return
+
+    const timeoutId = setTimeout(() => {
+      if (!isCheckingProject && !isTesting && !isGenerating) {
+        validateProject()
+      }
+    }, 1000)
+
+    return () => clearTimeout(timeoutId)
+  }, [sonarUrl, sonarComponent, sonarToken, sonarUsername, sonarPassword, reachabilityStatus])
+
 
   // Keyboard shortcuts: Ctrl+Enter (or Cmd+Enter on Mac) to submit
   useEffect(() => {
@@ -456,13 +603,31 @@ export function ReportForm() {
             </FormControl>
 
             <FormControl isRequired isInvalid={errors.sonarcomponent}>
-              <Tooltip
-                label="The unique identifier for your project in SonarQube (found in project settings)"
-                placement="top-start"
-                hasArrow
-              >
-                <FormLabel cursor="help">Project Key / Component</FormLabel>
-              </Tooltip>
+              <HStack justify="space-between">
+                <Tooltip
+                  label="The unique identifier for your project in SonarQube (found in project settings)"
+                  placement="top-start"
+                  hasArrow
+                >
+                  <FormLabel cursor="help">Project Key / Component</FormLabel>
+                </Tooltip>
+                {isCheckingProject && (
+                  <HStack spacing={1}>
+                    <Spinner size="xs" />
+                    <Text fontSize="xs" color="gray.500">Validating...</Text>
+                  </HStack>
+                )}
+                {!isCheckingProject && projectStatus && (
+                  <Tooltip
+                    label={projectStatus.valid ? 'Project found and accessible' : projectStatus.error}
+                    placement="top"
+                  >
+                    <Badge colorScheme={projectStatus.valid ? 'green' : 'red'} fontSize="xs">
+                      {projectStatus.valid ? '✓ Valid' : '✗ Invalid'}
+                    </Badge>
+                  </Tooltip>
+                )}
+              </HStack>
               <Input
                 {...register('sonarcomponent', {
                   required: 'Project key is required',
@@ -475,6 +640,14 @@ export function ReportForm() {
               />
               {errors.sonarcomponent ? (
                 <FormErrorMessage>{errors.sonarcomponent.message}</FormErrorMessage>
+              ) : projectStatus && !projectStatus.valid ? (
+                <Text fontSize="xs" color="red.500" mt={1}>
+                  ⚠️ {projectStatus.error}
+                </Text>
+              ) : projectStatus && projectStatus.valid ? (
+                <Text fontSize="xs" color="green.500" mt={1}>
+                  ✓ Project found and accessible
+                </Text>
               ) : (
                 <Text fontSize="sm" color="gray.500" mt={1}>
                   The SonarQube component/project key to analyze
@@ -486,33 +659,59 @@ export function ReportForm() {
 
             {/* Authentication - Token */}
             <FormControl>
-              <Tooltip
-                label={
-                  tokenUrl ? (
-                    <VStack spacing={1} align="start">
-                      <Text>Generate a token in your SonarQube instance:</Text>
-                      <Text fontWeight="bold" color="blue.200">
-                        User → My Account → Security → Generate Tokens
-                      </Text>
-                      <Text fontSize="xs" mt={1}>
-                        Or click below to open token page
-                      </Text>
-                    </VStack>
-                  ) : (
-                    "Generate a token in SonarQube: User → My Account → Security → Generate Tokens"
-                  )
-                }
-                placement="top-start"
-                hasArrow
-              >
-                <FormLabel cursor="help">Auth Token (Recommended)</FormLabel>
-              </Tooltip>
+              <HStack justify="space-between">
+                <Tooltip
+                  label={
+                    tokenUrl ? (
+                      <VStack spacing={1} align="start">
+                        <Text>Generate a token in your SonarQube instance:</Text>
+                        <Text fontWeight="bold" color="blue.200">
+                          User → My Account → Security → Generate Tokens
+                        </Text>
+                        <Text fontSize="xs" mt={1}>
+                          Or click below to open token page
+                        </Text>
+                      </VStack>
+                    ) : (
+                      "Generate a token in SonarQube: User → My Account → Security → Generate Tokens"
+                    )
+                  }
+                  placement="top-start"
+                  hasArrow
+                >
+                  <FormLabel cursor="help">Auth Token (Recommended)</FormLabel>
+                </Tooltip>
+                {isCheckingAuth && (
+                  <HStack spacing={1}>
+                    <Spinner size="xs" />
+                    <Text fontSize="xs" color="gray.500">Validating...</Text>
+                  </HStack>
+                )}
+                {!isCheckingAuth && authStatus && (
+                  <Tooltip
+                    label={authStatus.valid ? 'Authentication successful' : authStatus.error}
+                    placement="top"
+                  >
+                    <Badge colorScheme={authStatus.valid ? 'green' : 'red'} fontSize="xs">
+                      {authStatus.valid ? '✓ Valid' : '✗ Invalid'}
+                    </Badge>
+                  </Tooltip>
+                )}
+              </HStack>
               <Input
                 type="password"
                 {...register('sonartoken')}
                 placeholder="squ_..."
               />
-              {tokenUrl ? (
+              {authStatus && !authStatus.valid ? (
+                <Text fontSize="xs" color="red.500" mt={1}>
+                  ⚠️ {authStatus.error}
+                </Text>
+              ) : authStatus && authStatus.valid ? (
+                <Text fontSize="xs" color="green.500" mt={1}>
+                  ✓ Authentication successful
+                </Text>
+              ) : tokenUrl ? (
                 <Text fontSize="sm" mt={1}>
                   <Link href={tokenUrl} color="blue.500" isExternal textDecoration="underline">
                     Click here to generate a token in your SonarQube instance →
