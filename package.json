@@ -25,6 +25,7 @@
     "test": "mocha test/**/*.test.js",
     "test:watch": "mocha test/**/*.test.js --watch",
     "test:coverage": "nyc --reporter=html --reporter=text mocha test/**/*.test.js",
+    "test:coverage:ci": "nyc --no-check-coverage --reporter=html --reporter=text --reporter=lcov mocha test/**/*.test.js",
     "test:lcov": "nyc --reporter=lcov mocha test/**/*.test.js",
     "version": "npm run changelog && git add CHANGELOG.md",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s"

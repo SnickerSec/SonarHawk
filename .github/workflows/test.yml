@@ -33,7 +33,7 @@ jobs:
       run: npm test
 
     - name: Generate coverage report
-      run: npm run test:coverage
+      run: npm run test:coverage:ci
 
     - name: Upload coverage to Codecov
       if: matrix.node-version == '20.x'
