@@ -48,7 +48,21 @@ jobs:
         id: version
         run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
+      - name: Check if release exists
+        id: check_release
+        run: |
+          if gh release view "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "ℹ️  Release v${{ steps.version.outputs.version }} already exists, skipping..."
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "✓ Release v${{ steps.version.outputs.version }} does not exist, will create..."
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Get Changelog Entry
+        if: steps.check_release.outputs.exists == 'false'
         id: changelog
         run: |
           CHANGELOG=$(awk -v ver="${{ steps.version.outputs.version }}" '
@@ -61,6 +75,7 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
+        if: steps.check_release.outputs.exists == 'false'
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ steps.version.outputs.version }}
@@ -70,3 +85,8 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Release Skipped
+        if: steps.check_release.outputs.exists == 'true'
+        run: |
+          echo "::notice::Release v${{ steps.version.outputs.version }} already exists and was not recreated"
