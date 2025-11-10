@@ -35,7 +35,9 @@ import {
   ModalFooter,
   ModalCloseButton,
   useDisclosure,
-  Link
+  Link,
+  InputGroup,
+  InputLeftAddon
 } from '@chakra-ui/react'
 import { useForm } from 'react-hook-form'
 import { useState, useEffect } from 'react'
@@ -61,11 +63,23 @@ export function ReportForm() {
   const sonarUrl = watch('sonarurl')
   const sonarComponent = watch('sonarcomponent')
 
+  // Generate full URL from input (adds https:// if not present)
+  const getFullUrl = (url) => {
+    if (!url) return null
+    const trimmed = url.trim()
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return trimmed
+    }
+    return `https://${trimmed}`
+  }
+
+  const fullSonarUrl = getFullUrl(sonarUrl)
+
   // Generate token URL based on user's SonarQube instance
   const getTokenUrl = () => {
-    if (!sonarUrl) return null
+    if (!fullSonarUrl) return null
     try {
-      const baseUrl = sonarUrl.replace(/\/+$/, '') // Remove trailing slashes
+      const baseUrl = fullSonarUrl.replace(/\/+$/, '') // Remove trailing slashes
       // SonarCloud uses different URL structure
       if (baseUrl.includes('sonarcloud.io')) {
         return 'https://sonarcloud.io/account/security'
@@ -80,9 +94,8 @@ export function ReportForm() {
 
   // Auto-test connectivity when URL changes
   useEffect(() => {
-    // Validate URL format before testing
-    const urlPattern = /^https?:\/\/.+/
-    if (!sonarUrl || !urlPattern.test(sonarUrl)) {
+    // Need at least a domain name
+    if (!sonarUrl || sonarUrl.trim().length < 3) {
       setConnectionStatus(null)
       return
     }
@@ -146,11 +159,14 @@ export function ReportForm() {
         ? '/api/test-connection'
         : 'http://localhost:3000/api/test-connection'
 
+      // Use full URL with https:// prefix
+      const urlToTest = getFullUrl(formData.sonarurl)
+
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          sonarurl: formData.sonarurl,
+          sonarurl: urlToTest,
           sonarcomponent: formData.sonarcomponent,
           sonartoken: formData.sonartoken,
           sonarusername: formData.sonarusername,
@@ -207,6 +223,11 @@ export function ReportForm() {
         }
         return acc
       }, {})
+
+      // Add https:// prefix to URL if not present
+      if (cleanData.sonarurl) {
+        cleanData.sonarurl = getFullUrl(cleanData.sonarurl)
+      }
 
       console.log('Sending request to API...', cleanData)
       setGeneratingStep('Connecting to SonarQube...')
@@ -304,7 +325,7 @@ export function ReportForm() {
             <FormControl isRequired isInvalid={errors.sonarurl}>
               <HStack justify="space-between">
                 <Tooltip
-                  label="The base URL of your SonarQube or SonarCloud instance"
+                  label="The domain of your SonarQube or SonarCloud instance (https:// is automatically added)"
                   placement="top-start"
                   hasArrow
                 >
@@ -322,17 +343,20 @@ export function ReportForm() {
                   </Badge>
                 )}
               </HStack>
-              <Input
-                {...register('sonarurl', {
-                  required: 'SonarQube URL is required',
-                  pattern: {
-                    value: /^https?:\/\/.+/,
-                    message: 'Must be a valid URL (http:// or https://)'
-                  }
-                })}
-                placeholder="https://sonar.company.com"
-                type="url"
-              />
+              <InputGroup>
+                <InputLeftAddon>https://</InputLeftAddon>
+                <Input
+                  {...register('sonarurl', {
+                    required: 'SonarQube URL is required',
+                    minLength: {
+                      value: 3,
+                      message: 'Please enter a valid domain'
+                    }
+                  })}
+                  placeholder="sonarqube.intellum.com"
+                  type="text"
+                />
+              </InputGroup>
               {errors.sonarurl && (
                 <FormErrorMessage>{errors.sonarurl.message}</FormErrorMessage>
               )}
