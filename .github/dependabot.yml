@@ -9,10 +9,12 @@ updates:
       production-dependencies:
         dependency-type: "production"
         update-types:
+          - "major"
           - "minor"
           - "patch"
       development-dependencies:
         dependency-type: "development"
         update-types:
+          - "major"
           - "minor"
           - "patch"
