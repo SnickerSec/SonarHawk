@@ -57,6 +57,186 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Demo report endpoint
+app.get('/api/demo', async (req, res) => {
+  try {
+    process.chdir(projectRoot);
+
+    // Create demo report with sample data
+    const demoOptions = {
+      sonarUrl: 'https://sonarcloud.io',
+      sonarComponent: 'demo:project',
+      sonarOrganization: 'demo-org',
+      project: 'Demo Project',
+      application: 'Sample Application',
+      release: 'v1.0.0',
+      securityHotspot: true,
+      coverage: true,
+      linkIssues: true,
+      qualityGateStatus: true,
+      rulesInReport: true,
+      darkTheme: true,
+      output: resolve(projectRoot, `demo-report-${Date.now()}.html`)
+    };
+
+    // Note: This will fail gracefully as it's demo data
+    // We'll catch the error and serve a pre-made demo message
+    try {
+      await generateReport(demoOptions);
+      const reportHtml = await readFile(demoOptions.output, 'utf8');
+      res.setHeader('Content-Type', 'text/html');
+      res.send(reportHtml);
+      await unlink(demoOptions.output).catch(() => {});
+    } catch (error) {
+      // If demo generation fails, serve a demo HTML page explaining the report
+      const demoHtml = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SonarHawk Demo Report</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      margin: 0;
+      padding: 40px 20px;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    h1 {
+      color: #333;
+      margin-top: 0;
+      font-size: 2.5em;
+    }
+    .subtitle {
+      color: #666;
+      font-size: 1.2em;
+      margin-bottom: 30px;
+    }
+    .feature {
+      background: #f8f9fa;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      border-left: 4px solid #667eea;
+    }
+    .feature h3 {
+      margin-top: 0;
+      color: #667eea;
+    }
+    .feature ul {
+      margin: 10px 0;
+      padding-left: 20px;
+    }
+    .feature li {
+      margin: 8px 0;
+    }
+    .note {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+    .screenshot {
+      background: #e9ecef;
+      padding: 60px 20px;
+      text-align: center;
+      border-radius: 8px;
+      margin: 20px 0;
+      color: #6c757d;
+      font-style: italic;
+    }
+    .cta {
+      background: #667eea;
+      color: white;
+      padding: 15px 30px;
+      border-radius: 8px;
+      text-align: center;
+      margin: 30px 0;
+      font-size: 1.1em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🦅 SonarHawk Demo Report</h1>
+    <p class="subtitle">Enhanced SonarQube Vulnerability Reports</p>
+
+    <div class="note">
+      <strong>📝 Note:</strong> This is a demonstration page. A real SonarHawk report contains actual vulnerability data from your SonarQube instance.
+    </div>
+
+    <div class="feature">
+      <h3>📊 What's Included in a Real Report</h3>
+      <ul>
+        <li><strong>Executive Summary</strong> - High-level overview of security findings</li>
+        <li><strong>Vulnerability Details</strong> - Complete list with severity, type, and location</li>
+        <li><strong>Security Hotspots</strong> - Areas requiring security review</li>
+        <li><strong>Code Coverage</strong> - Test coverage metrics (optional)</li>
+        <li><strong>Quality Gate Status</strong> - Pass/fail indicators (optional)</li>
+        <li><strong>Rule Descriptions</strong> - Detailed explanation of each security rule</li>
+      </ul>
+    </div>
+
+    <div class="feature">
+      <h3>✨ Key Features</h3>
+      <ul>
+        <li>🎨 Dark/Light theme support</li>
+        <li>📱 Fully responsive design</li>
+        <li>🔗 Clickable links to SonarQube issues</li>
+        <li>📄 Self-contained HTML file</li>
+        <li>🎯 Filterable and sortable tables</li>
+        <li>📈 Visual charts and metrics</li>
+        <li>💾 Export to PDF capability</li>
+      </ul>
+    </div>
+
+    <div class="screenshot">
+      [Sample vulnerability table would appear here with columns for Severity, Type, Message, File, and Line]
+    </div>
+
+    <div class="feature">
+      <h3>🚀 How to Generate Your Own Report</h3>
+      <ul>
+        <li>Enter your SonarQube server URL</li>
+        <li>Provide your project key</li>
+        <li>Add authentication credentials (token recommended)</li>
+        <li>Click "Generate Report"</li>
+        <li>Download your comprehensive security report!</li>
+      </ul>
+    </div>
+
+    <div class="cta">
+      Connect your SonarQube instance to generate a real report with your project's security findings!
+    </div>
+
+    <p style="text-align: center; color: #999; margin-top: 40px;">
+      🤖 Generated with SonarHawk<br>
+      <small>Your enhanced SonarQube reporting tool</small>
+    </p>
+  </div>
+</body>
+</html>`;
+
+      res.setHeader('Content-Type', 'text/html');
+      res.send(demoHtml);
+    }
+  } catch (error) {
+    console.error('Demo report failed:', error);
+    res.status(500).send('<h1>Error generating demo report</h1><p>Please try again later.</p>');
+  }
+});
+
 // Connection test endpoint
 app.post('/api/test-connection', async (req, res) => {
   try {
