@@ -53,11 +53,13 @@ export function ReportForm() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [isTesting, setIsTesting] = useState(false)
   const [connectionStatus, setConnectionStatus] = useState(null)
+  const [reachabilityStatus, setReachabilityStatus] = useState(null)
   const [generatingStep, setGeneratingStep] = useState('')
   const [previewHtml, setPreviewHtml] = useState('')
   const [reportBlob, setReportBlob] = useState(null)
   const [reportData, setReportData] = useState(null)
   const { isOpen, onOpen, onClose } = useDisclosure()
+  const [isCheckingReachability, setIsCheckingReachability] = useState(false)
 
   // Watch SonarQube URL for dynamic token link
   const sonarUrl = watch('sonarurl')
@@ -92,10 +94,76 @@ export function ReportForm() {
 
   const tokenUrl = getTokenUrl()
 
-  // Auto-test connectivity when URL changes
+  // Basic reachability check (just tests if server responds)
+  const checkReachability = async (url) => {
+    if (!url) return
+
+    setIsCheckingReachability(true)
+    setReachabilityStatus(null)
+
+    try {
+      const apiUrl = import.meta.env.PROD
+        ? '/api/test-connection'
+        : 'http://localhost:3000/api/test-connection'
+
+      const testUrl = getFullUrl(url)
+
+      // Simple check - just test if server responds
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sonarurl: testUrl,
+          sonarcomponent: 'test' // Dummy component for reachability check
+        })
+      })
+
+      const result = await response.json()
+
+      // Even if project doesn't exist, if we get server version, it's reachable
+      if (result.success || (result.error && !result.error.includes('reach'))) {
+        setReachabilityStatus({
+          reachable: true,
+          version: result.server?.version
+        })
+      } else {
+        setReachabilityStatus({
+          reachable: false,
+          error: result.error
+        })
+      }
+    } catch (error) {
+      setReachabilityStatus({
+        reachable: false,
+        error: 'Unable to reach server'
+      })
+    } finally {
+      setIsCheckingReachability(false)
+    }
+  }
+
+  // Auto-check reachability when URL changes (doesn't need project key)
   useEffect(() => {
     // Need at least a domain name
     if (!sonarUrl || sonarUrl.trim().length < 3) {
+      setReachabilityStatus(null)
+      return
+    }
+
+    // Debounce the reachability check
+    const timeoutId = setTimeout(() => {
+      if (sonarUrl && !isCheckingReachability && !isTesting && !isGenerating) {
+        checkReachability(sonarUrl)
+      }
+    }, 1000) // Wait 1 second after user stops typing
+
+    return () => clearTimeout(timeoutId)
+  }, [sonarUrl])
+
+  // Auto-test full connectivity when URL + Component are both present
+  useEffect(() => {
+    // Need both URL and component for full test
+    if (!sonarUrl || !sonarComponent) {
       setConnectionStatus(null)
       return
     }
@@ -331,16 +399,31 @@ export function ReportForm() {
                 >
                   <FormLabel cursor="help">SonarQube URL</FormLabel>
                 </Tooltip>
-                {isTesting && (
+                {isCheckingReachability && (
                   <HStack spacing={1}>
                     <Spinner size="xs" />
-                    <Text fontSize="xs" color="gray.500">Testing...</Text>
+                    <Text fontSize="xs" color="gray.500">Checking reachability...</Text>
                   </HStack>
                 )}
-                {connectionStatus && !isTesting && (
-                  <Badge colorScheme={connectionStatus.success ? 'green' : 'red'} fontSize="xs">
-                    {connectionStatus.success ? 'Connected' : 'Failed'}
-                  </Badge>
+                {isTesting && !isCheckingReachability && (
+                  <HStack spacing={1}>
+                    <Spinner size="xs" />
+                    <Text fontSize="xs" color="gray.500">Testing connection...</Text>
+                  </HStack>
+                )}
+                {!isCheckingReachability && !isTesting && reachabilityStatus && (
+                  <Tooltip
+                    label={
+                      reachabilityStatus.reachable
+                        ? `Server reachable${reachabilityStatus.version ? ` (v${reachabilityStatus.version})` : ''}`
+                        : reachabilityStatus.error
+                    }
+                    placement="top"
+                  >
+                    <Badge colorScheme={reachabilityStatus.reachable ? 'green' : 'red'} fontSize="xs">
+                      {reachabilityStatus.reachable ? '✓ Reachable' : '✗ Unreachable'}
+                    </Badge>
+                  </Tooltip>
                 )}
               </HStack>
               <InputGroup>
@@ -359,6 +442,16 @@ export function ReportForm() {
               </InputGroup>
               {errors.sonarurl && (
                 <FormErrorMessage>{errors.sonarurl.message}</FormErrorMessage>
+              )}
+              {reachabilityStatus && !reachabilityStatus.reachable && (
+                <Text fontSize="xs" color="red.500" mt={1}>
+                  ⚠️ {reachabilityStatus.error || 'Server is not reachable. Please check the URL and network connection.'}
+                </Text>
+              )}
+              {reachabilityStatus && reachabilityStatus.reachable && reachabilityStatus.version && (
+                <Text fontSize="xs" color="green.500" mt={1}>
+                  ✓ Connected to SonarQube {reachabilityStatus.version}
+                </Text>
               )}
             </FormControl>
 
