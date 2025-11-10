@@ -1,4 +1,11 @@
 #!/usr/bin/env node
-import { buildCommand, generateReport } from "./index.js";
+import { buildCommand, generateReport, generatePortfolioReport } from "./index.js";
 
-generateReport(buildCommand().parse().opts());
+const options = buildCommand().parse().opts();
+
+// Check if portfolio mode is enabled
+if (options.portfolioMode) {
+  generatePortfolioReport(options);
+} else {
+  generateReport(options);
+}

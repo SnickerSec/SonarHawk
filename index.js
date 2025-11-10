@@ -695,6 +695,149 @@ const processComplianceData = (issues) => {
   };
 };
 
+// Portfolio report generation function
+const generatePortfolioReport = async (options) => {
+  const { onError = () => process.exit(1) } = options;
+
+  try {
+    // Parse portfolio projects from options
+    let projects = [];
+
+    if (options.portfolioConfig) {
+      // Load from JSON file
+      const configData = await readFile(options.portfolioConfig, 'utf-8');
+      const config = JSON.parse(configData);
+      projects = config.projects;
+    } else if (options.portfolioProjects) {
+      // Parse from command line (comma-separated)
+      projects = options.portfolioProjects.split(',').map(p => {
+        const [component, name] = p.split(':');
+        return { component: component.trim(), name: name?.trim() || component.trim() };
+      });
+    } else {
+      throw new Error('Portfolio requires either --portfolio-config or --portfolio-projects');
+    }
+
+    console.error(`Generating portfolio report for ${projects.length} projects...`);
+
+    // Initialize client
+    const client = new SonarClient({
+      sonarUrl: options.sonarurl,
+      sonarToken: options.sonartoken,
+      sonarUsername: options.sonarusername,
+      sonarPassword: options.sonarpassword,
+      debug: options.debug
+    });
+
+    // Get SonarQube version
+    const version = await client.get("/api/system/status").then(res => semver.coerce(res.version));
+    console.error("SonarQube version: %s", version);
+
+    const config = getSonarConfig(version);
+
+    // Authenticate if credentials provided
+    if (client.token || (client.username && client.password)) {
+      await client.authenticate({
+        username: client.username,
+        password: client.password,
+        token: client.token
+      });
+    }
+
+    // Collect data for all projects
+    const portfolioData = [];
+    let totalIssues = 0;
+    let totalHigh = 0;
+    let totalMedium = 0;
+    let totalLow = 0;
+
+    for (const project of projects) {
+      console.error(`Collecting data for project: ${project.name}`);
+
+      try {
+        const projectOptions = {
+          ...options,
+          sonarcomponent: project.component,
+          project: project.name
+        };
+
+        // Collect project data
+        const rules = await collectors.rules(client, config, projectOptions);
+        const issues = await collectors.issues(client, config, projectOptions, rules);
+        const hotspots = await collectors.hotspots(client, config, projectOptions);
+        const qualityGateStatus = await collectors.qualityGateStatus(client, projectOptions);
+        const coverage = await collectors.coverage(client, projectOptions);
+
+        const allIssues = [...issues, ...hotspots];
+        const summary = {
+          high: allIssues.filter(i => i.severity === "HIGH" || i.severity === "BLOCKER").length,
+          medium: allIssues.filter(i => i.severity === "MEDIUM").length,
+          low: allIssues.filter(i => i.severity === "LOW").length,
+          total: allIssues.length
+        };
+
+        // Aggregate totals
+        totalIssues += summary.total;
+        totalHigh += summary.high;
+        totalMedium += summary.medium;
+        totalLow += summary.low;
+
+        portfolioData.push({
+          name: project.name,
+          component: project.component,
+          summary,
+          qualityGateStatus: qualityGateStatus?.projectStatus?.status || 'N/A',
+          coverage: coverage || 0,
+          issues: allIssues,
+          compliance: processComplianceData(allIssues)
+        });
+
+      } catch (error) {
+        console.error(`Failed to collect data for ${project.name}:`, error.message);
+        portfolioData.push({
+          name: project.name,
+          component: project.component,
+          error: error.message,
+          summary: { high: 0, medium: 0, low: 0, total: 0 }
+        });
+      }
+    }
+
+    // Prepare portfolio summary data
+    const data = {
+      date: new Date().toLocaleDateString("en-us", {
+        weekday: "long",
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      }),
+      portfolioName: options.portfolioName || 'Security Portfolio',
+      sonarBaseURL: client.baseURL,
+      projects: portfolioData,
+      totalProjects: projects.length,
+      aggregateSummary: {
+        totalIssues,
+        high: totalHigh,
+        medium: totalMedium,
+        low: totalLow,
+        avgCoverage: portfolioData.reduce((sum, p) => sum + (p.coverage || 0), 0) / portfolioData.length,
+        qualityGatesPassed: portfolioData.filter(p => p.qualityGateStatus === 'OK').length,
+        qualityGatesFailed: portfolioData.filter(p => p.qualityGateStatus === 'ERROR').length
+      }
+    };
+
+    // Generate portfolio output
+    await generatePortfolioOutput(data, options);
+
+    console.error('Portfolio report generated successfully');
+    return data;
+
+  } catch (error) {
+    console.error('Portfolio generation error:', error.message);
+    throw error;
+  }
+};
+
 // Main report generation function
 const generateReport = async (options) => {
   const { onError = () => process.exit(1) } = options;
@@ -838,6 +981,39 @@ const generateReport = async (options) => {
   }
 };
 
+// Portfolio output generation
+async function generatePortfolioOutput(data, options) {
+  // Save JSON report if requested
+  if (options.saveReportJson) {
+    await writeFile(
+      options.saveReportJson,
+      JSON.stringify(data, null, 2)
+    );
+  }
+
+  // Generate HTML portfolio report
+  if (options.output) {
+    const templateFile = resolve(__dirname, "portfolio.ejs");
+    console.error("using portfolio template file: %s", templateFile);
+
+    if (!existsSync(templateFile)) {
+      throw new Error(`Portfolio template file not found: ${templateFile}`);
+    }
+
+    const renderedFile = await ejs.renderFile(
+      templateFile,
+      {
+        ...data,
+        lightTheme: options.lightTheme === true,
+        darkTheme: !options.lightTheme
+      },
+      {}
+    );
+
+    await writeFile(options.output, renderedFile);
+  }
+}
+
 // Output generation
 async function generateOutput(data, options) {
   // Save JSON report if requested
@@ -851,16 +1027,16 @@ async function generateOutput(data, options) {
       }
       return value;
     };
-    
+
     await writeFile(
-      options.saveReportJson, 
+      options.saveReportJson,
       JSON.stringify(data, replacer, 2)
     );
   }
 
   // Always generate HTML report using index.ejs
   if (options.output) {
-    const stylesheetFile = options.stylesheetFile || 
+    const stylesheetFile = options.stylesheetFile ||
       resolve(__dirname, "style.css");
     const stylesheet = await readFile(stylesheetFile, "binary");
     console.error("using stylesheet file: %s", stylesheetFile);
@@ -881,15 +1057,15 @@ async function generateOutput(data, options) {
 
     const renderedFile = await ejs.renderFile(
       templateFile,
-      { 
-        ...data, 
+      {
+        ...data,
         stylesheet,
         lightTheme: options.lightTheme === true,
-        darkTheme: !options.lightTheme 
+        darkTheme: !options.lightTheme
       },
       {}
     );
-    
+
     await writeFile(options.output, renderedFile);
   }
 }
@@ -1020,19 +1196,49 @@ const buildCommand = () => {
       "--no-include-compliance",
       "Disable compliance section in the report"
     )
+    .option(
+      "--portfolio-mode",
+      "Enable portfolio mode to aggregate multiple projects"
+    )
+    .option(
+      "--portfolio-config <file>",
+      "JSON configuration file for portfolio projects"
+    )
+    .option(
+      "--portfolio-projects <projects>",
+      "Comma-separated list of projects (format: component:name,component:name)"
+    )
+    .option(
+      "--portfolio-name <name>",
+      "Name for the portfolio report"
+    )
         .addHelpText(
           "after",
           `
     Examples:
-      Generate HTML report:
+      Generate single project report:
         sonarhawk --project=MyProject --sonarurl=https://sonarqube.company.com --sonarcomponent=myapp:main --sonartoken=xxx --output=report.html
 
       Generate report with compliance view:
         sonarhawk --project=MyProject --sonarurl=https://sonarqube.company.com --sonarcomponent=myapp:main --sonartoken=xxx --include-compliance --output=report.html
 
+      Generate portfolio report:
+        sonarhawk --portfolio-mode --portfolio-name="Enterprise Security" --sonarurl=https://sonarqube.company.com --sonartoken=xxx --portfolio-projects="app1:Frontend,app2:Backend,app3:API" --output=portfolio.html
+
+      Generate portfolio report from config file:
+        sonarhawk --portfolio-mode --sonarurl=https://sonarqube.company.com --sonartoken=xxx --portfolio-config=portfolio.json --output=portfolio.html
+
+      Portfolio config JSON format (portfolio.json):
+        {
+          "projects": [
+            { "component": "app1:main", "name": "Frontend App" },
+            { "component": "app2:main", "name": "Backend API" },
+            { "component": "app3:main", "name": "Mobile App" }
+          ]
+        }
+
       Export to PDF:
         Open the generated HTML report in a browser and click "Export to PDF" button (or press Ctrl/Cmd+P)
-        The report includes an embedded PDF export feature with smart pagination and formatting.
     `
         );
     
@@ -1043,9 +1249,10 @@ const buildCommand = () => {
   }
 };
 
-export { 
-  buildCommand, 
+export {
+  buildCommand,
   generateReport,
+  generatePortfolioReport,
   SonarClient,
   SonarApiError,
   collectors, // Export collectors for testing
