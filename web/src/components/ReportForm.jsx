@@ -677,7 +677,109 @@ export function ReportForm() {
         <Divider />
 
         {/* Accordion for organized options */}
-        <Accordion allowMultiple>
+        <Accordion allowMultiple defaultIndex={[0]}>
+
+          {/* Popular Options */}
+          <AccordionItem>
+            <h2>
+              <AccordionButton>
+                <Box flex="1" textAlign="left">
+                  <HStack spacing={2}>
+                    <Heading size="sm">⭐ Popular Options</Heading>
+                    <Badge colorScheme="blue" fontSize="xs">Most Used</Badge>
+                  </HStack>
+                </Box>
+                <AccordionIcon />
+              </AccordionButton>
+            </h2>
+            <AccordionPanel pb={4}>
+              <VStack spacing={4}>
+                <FormControl>
+                  <Tooltip
+                    label="Analyze a specific branch instead of the main branch"
+                    placement="top-start"
+                    hasArrow
+                  >
+                    <FormLabel cursor="help">Branch</FormLabel>
+                  </Tooltip>
+                  <Input
+                    {...register('branch')}
+                    placeholder="main"
+                  />
+                  <Text fontSize="sm" color="gray.500" mt={1}>
+                    Leave empty for default branch
+                  </Text>
+                </FormControl>
+
+                <FormControl>
+                  <Tooltip
+                    label="Generate report for a specific pull request"
+                    placement="top-start"
+                    hasArrow
+                  >
+                    <FormLabel cursor="help">Pull Request ID</FormLabel>
+                  </Tooltip>
+                  <Input
+                    {...register('pullrequest')}
+                    placeholder="123"
+                    type="number"
+                  />
+                </FormControl>
+
+                <FormControl display="flex" alignItems="center">
+                  <Tooltip
+                    label="Show pass/fail status from SonarQube quality gates"
+                    placement="top-start"
+                    hasArrow
+                  >
+                    <FormLabel mb="0" flex="1" cursor="help">
+                      Include Quality Gate Status
+                    </FormLabel>
+                  </Tooltip>
+                  <Switch {...register('qualityGateStatus')} />
+                </FormControl>
+
+                <FormControl display="flex" alignItems="center">
+                  <Tooltip
+                    label="Include code coverage metrics in the report"
+                    placement="top-start"
+                    hasArrow
+                  >
+                    <FormLabel mb="0" flex="1" cursor="help">
+                      Include Code Coverage
+                    </FormLabel>
+                  </Tooltip>
+                  <Switch {...register('coverage')} />
+                </FormControl>
+
+                <FormControl display="flex" alignItems="center">
+                  <Tooltip
+                    label="Add clickable links to issues in your SonarQube instance"
+                    placement="top-start"
+                    hasArrow
+                  >
+                    <FormLabel mb="0" flex="1" cursor="help">
+                      Link Issues to SonarQube
+                    </FormLabel>
+                  </Tooltip>
+                  <Switch {...register('linkIssues')} />
+                </FormControl>
+
+                <FormControl display="flex" alignItems="center">
+                  <Tooltip
+                    label="Use dark theme for the generated report (recommended)"
+                    placement="top-start"
+                    hasArrow
+                  >
+                    <FormLabel mb="0" flex="1" cursor="help">
+                      Dark Theme Report
+                    </FormLabel>
+                  </Tooltip>
+                  <Switch {...register('darkTheme')} defaultChecked />
+                </FormControl>
+              </VStack>
+            </AccordionPanel>
+          </AccordionItem>
 
           {/* Project Metadata */}
           <AccordionItem>
@@ -733,29 +835,6 @@ export function ReportForm() {
             </h2>
             <AccordionPanel pb={4}>
               <VStack spacing={4}>
-                <FormControl>
-                  <FormLabel>Branch</FormLabel>
-                  <Input
-                    {...register('branch')}
-                    placeholder="main"
-                  />
-                  <Text fontSize="sm" color="gray.500" mt={1}>
-                    Specific branch to analyze
-                  </Text>
-                </FormControl>
-
-                <FormControl>
-                  <FormLabel>Pull Request ID</FormLabel>
-                  <Input
-                    {...register('pullrequest')}
-                    placeholder="123"
-                    type="number"
-                  />
-                  <Text fontSize="sm" color="gray.500" mt={1}>
-                    Analyze specific pull request
-                  </Text>
-                </FormControl>
-
                 <FormControl display="flex" alignItems="center">
                   <Tooltip
                     label="Only show issues introduced in the new code period defined in SonarQube"
@@ -809,27 +888,6 @@ export function ReportForm() {
               <VStack spacing={4}>
                 <FormControl display="flex" alignItems="center">
                   <FormLabel mb="0" flex="1">
-                    Include Quality Gate Status
-                  </FormLabel>
-                  <Switch {...register('qualityGateStatus')} />
-                </FormControl>
-
-                <FormControl display="flex" alignItems="center">
-                  <FormLabel mb="0" flex="1">
-                    Include Code Coverage
-                  </FormLabel>
-                  <Switch {...register('coverage')} />
-                </FormControl>
-
-                <FormControl display="flex" alignItems="center">
-                  <FormLabel mb="0" flex="1">
-                    Link Issues to SonarQube
-                  </FormLabel>
-                  <Switch {...register('linkIssues')} />
-                </FormControl>
-
-                <FormControl display="flex" alignItems="center">
-                  <FormLabel mb="0" flex="1">
                     Include Security Rules Section
                   </FormLabel>
                   <Switch {...register('rulesInReport')} defaultChecked />
@@ -867,13 +925,6 @@ export function ReportForm() {
             </h2>
             <AccordionPanel pb={4}>
               <VStack spacing={4}>
-                <FormControl display="flex" alignItems="center">
-                  <FormLabel mb="0" flex="1">
-                    Dark Theme
-                  </FormLabel>
-                  <Switch {...register('darkTheme')} defaultChecked />
-                </FormControl>
-
                 <FormControl>
                   <FormLabel>Custom Vulnerability Label (Singular)</FormLabel>
                   <Input
