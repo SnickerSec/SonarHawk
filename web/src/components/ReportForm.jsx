@@ -440,6 +440,35 @@ export function ReportForm() {
     }
   }
 
+  const downloadAsPDF = () => {
+    if (reportBlob) {
+      // Open report in new window and trigger PDF export
+      const url = window.URL.createObjectURL(reportBlob)
+      const newWindow = window.open(url, '_blank')
+
+      // Wait for the window to load, then trigger PDF export
+      if (newWindow) {
+        newWindow.addEventListener('load', () => {
+          setTimeout(() => {
+            // The report page has an exportToPDF function
+            if (newWindow.exportToPDF) {
+              newWindow.exportToPDF()
+            } else {
+              // Fallback: show instructions
+              toast({
+                title: 'PDF Export',
+                description: 'Click the "Export to PDF" button in the opened report, or press Ctrl/Cmd+P',
+                status: 'info',
+                duration: 5000,
+                isClosable: true
+              })
+            }
+          }, 1000)
+        })
+      }
+    }
+  }
+
   return (
     <Box as="form" onSubmit={handleSubmit(onSubmit)} width="100%" maxW="800px">
       <VStack spacing={6} align="stretch">
@@ -1075,8 +1104,11 @@ export function ReportForm() {
               <Button colorScheme="blue" variant="outline" onClick={openInNewTab}>
                 Open in New Tab
               </Button>
+              <Button colorScheme="purple" variant="outline" onClick={downloadAsPDF}>
+                📄 Download as PDF
+              </Button>
               <Button colorScheme="blue" onClick={downloadReport}>
-                Download Report
+                Download HTML
               </Button>
             </HStack>
           </ModalFooter>

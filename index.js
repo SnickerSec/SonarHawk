@@ -1023,8 +1023,17 @@ const buildCommand = () => {
         .addHelpText(
           "after",
           `
-    Example:
-    sonarflex --project=MyProject --application=MyApp --release=v1.0.0 --sonarurl=http://my.sonar.example.com --sonarcomponent=myapp:1.0.0 --in-new-code-period > /tmp/sonar-report`
+    Examples:
+      Generate HTML report:
+        sonarhawk --project=MyProject --sonarurl=https://sonarqube.company.com --sonarcomponent=myapp:main --sonartoken=xxx --output=report.html
+
+      Generate report with compliance view:
+        sonarhawk --project=MyProject --sonarurl=https://sonarqube.company.com --sonarcomponent=myapp:main --sonartoken=xxx --include-compliance --output=report.html
+
+      Export to PDF:
+        Open the generated HTML report in a browser and click "Export to PDF" button (or press Ctrl/Cmd+P)
+        The report includes an embedded PDF export feature with smart pagination and formatting.
+    `
         );
     
     return program;

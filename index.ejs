@@ -108,18 +108,34 @@
       /* Export to PDF Button Styling */
       .export-button {
         position: absolute;
-        top: 20px; /* Adjust as needed */
-        right: 20px; /* Adjust as needed */
+        top: 20px;
+        right: 20px;
         background-color: #007bff;
         color: #fff;
         border: none;
-        padding: 10px 20px;
+        padding: 12px 24px;
         border-radius: 5px;
         cursor: pointer;
         font-size: 16px;
+        font-weight: 500;
+        box-shadow: 0 2px 4px rgba(0,123,255,0.3);
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
       }
       .export-button:hover {
         background-color: #0056b3;
+        box-shadow: 0 4px 8px rgba(0,123,255,0.4);
+        transform: translateY(-1px);
+      }
+      .export-button:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 4px rgba(0,123,255,0.3);
+      }
+      .export-button::before {
+        content: "📄";
+        font-size: 18px;
       }
       .divider {
         grid-column: 1 / -1;
@@ -229,10 +245,28 @@
       .button:hover {
         background-color: #0056b3;
       }
-      /* Print Styling */
+      /* Print & PDF Styling */
       @media print {
-        .button-group {
-          display: none; /* Hide the button group when printing */
+        body {
+          margin: 0;
+          padding: 0;
+        }
+        .button-group, .export-button {
+          display: none !important;
+        }
+        .section {
+          page-break-inside: avoid;
+          break-inside: avoid;
+        }
+        table {
+          page-break-inside: auto;
+        }
+        tr {
+          page-break-inside: avoid;
+          page-break-after: auto;
+        }
+        h2 {
+          page-break-after: avoid;
         }
         /* Override dark theme for printing */
         .dark {
@@ -241,8 +275,27 @@
           --section-bg: #ffffff;
           --border-color: #cccccc;
           --th-bg: #f0f0f0;
-          --even-row-bg: #ffffff;
+          --even-row-bg: #fafafa;
+          --shadow-color: rgba(0, 0, 0, 0.05);
         }
+        /* Ensure links are visible in PDF */
+        a {
+          color: #0066cc;
+          text-decoration: underline;
+        }
+        /* Better spacing for PDF */
+        .container {
+          max-width: 100%;
+        }
+      }
+
+      /* PDF-specific optimizations */
+      .pdf-page-break {
+        page-break-before: always;
+      }
+
+      @page {
+        margin: 0.5in;
       }
 
       /* Update link styles */
@@ -480,15 +533,66 @@
     </div>
     <script>
       function exportToPDF() {
+        // Show loading state
+        const button = document.querySelector('.export-button');
+        const originalText = button.textContent;
+        button.textContent = '⏳ Generating PDF...';
+        button.disabled = true;
+
         const element = document.querySelector(".container");
-        html2pdf(element, {
-          margin: 1,
-          filename: "SonarQube_Report.pdf",
-          image: { type: "jpeg", quality: 0.98 },
-          html2canvas: { scale: 2 },
-          jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
-        });
+
+        // Get project name for filename
+        const projectName = '<%= projectName %>' || 'SonarQube';
+        const date = new Date().toISOString().split('T')[0];
+        const filename = `${projectName.replace(/[^a-z0-9]/gi, '_')}_Security_Report_${date}.pdf`;
+
+        const options = {
+          margin: [0.5, 0.5, 0.5, 0.5],
+          filename: filename,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: {
+            scale: 2,
+            useCORS: true,
+            letterRendering: true,
+            logging: false
+          },
+          jsPDF: {
+            unit: 'in',
+            format: 'a4',
+            orientation: 'portrait',
+            compress: true
+          },
+          pagebreak: {
+            mode: ['avoid-all', 'css', 'legacy'],
+            before: '.section'
+          }
+        };
+
+        html2pdf()
+          .set(options)
+          .from(element)
+          .save()
+          .then(() => {
+            button.textContent = originalText;
+            button.disabled = false;
+          })
+          .catch((error) => {
+            console.error('PDF generation failed:', error);
+            button.textContent = '❌ Export Failed';
+            setTimeout(() => {
+              button.textContent = originalText;
+              button.disabled = false;
+            }, 2000);
+          });
       }
+
+      // Add keyboard shortcut for PDF export (Ctrl/Cmd + P)
+      document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+          e.preventDefault();
+          exportToPDF();
+        }
+      });
     </script>
   </body>
 </html>
