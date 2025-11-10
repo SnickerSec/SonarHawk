@@ -685,7 +685,7 @@ export function ReportForm() {
               <AccordionButton>
                 <Box flex="1" textAlign="left">
                   <HStack spacing={2}>
-                    <Heading size="sm">⭐ Popular Options</Heading>
+                    <Heading size="sm">Popular Options</Heading>
                     <Badge colorScheme="blue" fontSize="xs">Most Used</Badge>
                   </HStack>
                 </Box>
