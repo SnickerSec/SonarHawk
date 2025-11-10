@@ -9,7 +9,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(__dirname, '..');
 
 // Import main project file
-const { generateReport } = await import('../index.js');
+const indexModule = await import('../index.js');
+const { generateReport } = indexModule;
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -78,34 +79,45 @@ app.post('/api/test-connection', async (req, res) => {
       });
     }
 
-    // Create client
-    const client = new (SonarClient || class {
-      constructor(opts) {
-        const module = await import('../index.js');
-        // Use the actual implementation
-      }
-    })({
-      sonarUrl: req.body.sonarurl,
-      sonarToken: req.body.sonartoken,
-      sonarUsername: req.body.sonarusername,
-      sonarPassword: req.body.sonarpassword,
-      debug: false
+    // Test connection using got HTTP client directly
+    const { default: got } = await import('got');
+    const testUrl = req.body.sonarurl.replace(/\/+$/, '');
+
+    const headers = {};
+    if (req.body.sonartoken) {
+      headers['Authorization'] = `Bearer ${req.body.sonartoken}`;
+    } else if (req.body.sonarusername && req.body.sonarpassword) {
+      const credentials = Buffer.from(`${req.body.sonarusername}:${req.body.sonarpassword}`).toString('base64');
+      headers['Authorization'] = `Basic ${credentials}`;
+    }
+
+    // Test 1: Get server version
+    const statusResponse = await got.get(`${testUrl}/api/system/status`, {
+      headers,
+      responseType: 'json',
+      timeout: { request: 10000 },
+      throwHttpErrors: true
     });
 
-    // Test connection by getting server version
-    const status = await client.get('/api/system/status');
+    const status = statusResponse.body;
 
-    // Test authentication if credentials provided
+    // Test 2: Validate authentication if credentials provided
     if (req.body.sonartoken || (req.body.sonarusername && req.body.sonarpassword)) {
-      await client.authenticate({
-        token: req.body.sonartoken,
-        username: req.body.sonarusername,
-        password: req.body.sonarpassword
+      await got.get(`${testUrl}/api/authentication/validate`, {
+        headers,
+        responseType: 'json',
+        timeout: { request: 10000 },
+        throwHttpErrors: true
       });
     }
 
-    // Test project access
-    await client.get(`/api/projects/search?projects=${encodeURIComponent(req.body.sonarcomponent)}`);
+    // Test 3: Check project access
+    await got.get(`${testUrl}/api/projects/search?projects=${encodeURIComponent(req.body.sonarcomponent)}`, {
+      headers,
+      responseType: 'json',
+      timeout: { request: 10000 },
+      throwHttpErrors: true
+    });
 
     res.json({
       success: true,
@@ -121,18 +133,23 @@ app.post('/api/test-connection', async (req, res) => {
     let errorMessage = 'Connection test failed';
     let statusCode = 500;
 
-    if (error.message?.includes('ENOTFOUND') || error.message?.includes('ECONNREFUSED')) {
+    // Handle network errors
+    if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
       errorMessage = 'Cannot reach SonarQube server. Please check the URL and network connection.';
       statusCode = 400;
-    } else if (error.statusCode === 401 || error.message?.includes('Authentication failed')) {
-      errorMessage = 'Authentication failed. Please check your credentials.';
-      statusCode = 401;
-    } else if (error.statusCode === 403) {
-      errorMessage = 'Access denied. Please check your permissions.';
-      statusCode = 403;
-    } else if (error.statusCode === 404) {
-      errorMessage = 'Project not found. Please check the project key.';
-      statusCode = 404;
+    }
+    // Handle HTTP errors from got
+    else if (error.response) {
+      statusCode = error.response.statusCode;
+      if (statusCode === 401) {
+        errorMessage = 'Authentication failed. Please check your credentials.';
+      } else if (statusCode === 403) {
+        errorMessage = 'Access denied. Please check your permissions.';
+      } else if (statusCode === 404) {
+        errorMessage = 'Project not found. Please check the project key.';
+      } else {
+        errorMessage = `Server error: ${statusCode}`;
+      }
     }
 
     res.status(statusCode).json({
