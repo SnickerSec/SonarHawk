@@ -415,10 +415,10 @@ const collectors = {
     const withOrganization = options.sonarOrganization ? `&organization=${options.sonarOrganization}` : "";
     const newCodePeriodFilter = options.inNewCodePeriod ? "&inNewCodePeriod=true" : "";
     const issueLink = createIssueLink(client.baseURL, options.branch, options.sonarcomponent);
-    
+
     try {
       const issues = await client.paginate(
-        `/api/issues/search?componentKeys=${options.sonarcomponent}&statuses=${config.issueStatuses}&resolutions=&s=STATUS&asc=no${newCodePeriodFilter}${config.issuesFilter}${withOrganization}`,
+        `/api/issues/search?componentKeys=${options.sonarcomponent}&statuses=${config.issueStatuses}&resolutions=&s=STATUS&asc=no${newCodePeriodFilter}${config.issuesFilter}${withOrganization}&additionalFields=tags`,
         (json, results) => {
           results.push(...json.issues.map(issue => processIssue(issue, rules, issueLink)));
           return json.issues.length;
@@ -558,12 +558,12 @@ const processIssue = (issue, rules, createLink) => {
   const rule = rules.get(issue.rule);
   const message = rule ? rule.name : "/";
   let severity = issue.severity || rule?.severity;
-  
+
   // Convert BLOCKER to HIGH
   if (severity === 'BLOCKER') {
     severity = 'HIGH';
   }
-  
+
   return {
     rule: issue.rule,
     severity,
@@ -573,7 +573,8 @@ const processIssue = (issue, rules, createLink) => {
     line: issue.line,
     description: message,
     message: issue.message,
-    key: issue.key
+    key: issue.key,
+    tags: issue.tags || []
   };
 };
 
@@ -586,8 +587,113 @@ const processHotspot = (hotspot, severity, createLink) => ({
   line: hotspot.line,
   description: hotspot.rule ? hotspot.rule.name : "/",
   message: hotspot.message,
-  key: hotspot.key
+  key: hotspot.key,
+  tags: hotspot.tags || []
 });
+
+// Process compliance data from issues
+const processComplianceData = (issues) => {
+  const compliance = {
+    owasp: {
+      'a1-injection': [],
+      'a2-broken-authentication': [],
+      'a3-sensitive-data-exposure': [],
+      'a4-xxe': [],
+      'a5-broken-access-control': [],
+      'a6-security-misconfiguration': [],
+      'a7-xss': [],
+      'a8-insecure-deserialization': [],
+      'a9-vulnerable-components': [],
+      'a10-insufficient-logging': []
+    },
+    cwe: new Map(),
+    sans: new Map(),
+    otherTags: new Set()
+  };
+
+  issues.forEach(issue => {
+    if (!issue.tags || issue.tags.length === 0) return;
+
+    issue.tags.forEach(tag => {
+      const lowerTag = tag.toLowerCase();
+
+      // OWASP Top 10 (2017 and 2021 versions)
+      if (lowerTag.includes('owasp-a') || lowerTag.includes('owasp-top-10')) {
+        // Map OWASP tags to categories
+        if (lowerTag.includes('a1') || lowerTag.includes('injection')) {
+          compliance.owasp['a1-injection'].push(issue);
+        } else if (lowerTag.includes('a2') || lowerTag.includes('authentication')) {
+          compliance.owasp['a2-broken-authentication'].push(issue);
+        } else if (lowerTag.includes('a3') || lowerTag.includes('sensitive-data')) {
+          compliance.owasp['a3-sensitive-data-exposure'].push(issue);
+        } else if (lowerTag.includes('a4') || lowerTag.includes('xxe')) {
+          compliance.owasp['a4-xxe'].push(issue);
+        } else if (lowerTag.includes('a5') || lowerTag.includes('access-control')) {
+          compliance.owasp['a5-broken-access-control'].push(issue);
+        } else if (lowerTag.includes('a6') || lowerTag.includes('misconfiguration')) {
+          compliance.owasp['a6-security-misconfiguration'].push(issue);
+        } else if (lowerTag.includes('a7') || lowerTag.includes('xss') || lowerTag.includes('cross-site')) {
+          compliance.owasp['a7-xss'].push(issue);
+        } else if (lowerTag.includes('a8') || lowerTag.includes('deserialization')) {
+          compliance.owasp['a8-insecure-deserialization'].push(issue);
+        } else if (lowerTag.includes('a9') || lowerTag.includes('component')) {
+          compliance.owasp['a9-vulnerable-components'].push(issue);
+        } else if (lowerTag.includes('a10') || lowerTag.includes('logging')) {
+          compliance.owasp['a10-insufficient-logging'].push(issue);
+        }
+      }
+      // CWE (Common Weakness Enumeration)
+      else if (lowerTag.includes('cwe')) {
+        const cweMatch = tag.match(/cwe-?(\d+)/i);
+        if (cweMatch) {
+          const cweId = `CWE-${cweMatch[1]}`;
+          if (!compliance.cwe.has(cweId)) {
+            compliance.cwe.set(cweId, []);
+          }
+          compliance.cwe.get(cweId).push(issue);
+        }
+      }
+      // SANS Top 25
+      else if (lowerTag.includes('sans-top') || lowerTag.includes('sans25')) {
+        const sansMatch = tag.match(/sans[- ]?(\d+)/i);
+        if (sansMatch) {
+          const sansId = `SANS-${sansMatch[1]}`;
+          if (!compliance.sans.has(sansId)) {
+            compliance.sans.set(sansId, []);
+          }
+          compliance.sans.get(sansId).push(issue);
+        }
+      } else {
+        compliance.otherTags.add(tag);
+      }
+    });
+  });
+
+  // Convert Maps to sorted arrays for easier template rendering
+  const cweArray = Array.from(compliance.cwe.entries())
+    .map(([id, issues]) => ({ id, count: issues.length, issues }))
+    .sort((a, b) => b.count - a.count);
+
+  const sansArray = Array.from(compliance.sans.entries())
+    .map(([id, issues]) => ({ id, count: issues.length, issues }))
+    .sort((a, b) => b.count - a.count);
+
+  // Calculate OWASP stats
+  const owaspStats = Object.entries(compliance.owasp).map(([category, issues]) => ({
+    category: category.replace(/-/g, ' ').toUpperCase(),
+    categoryId: category,
+    count: issues.length,
+    issues
+  })).filter(item => item.count > 0);
+
+  return {
+    owasp: owaspStats,
+    cwe: cweArray,
+    sans: sansArray,
+    otherTags: Array.from(compliance.otherTags),
+    hasComplianceData: owaspStats.length > 0 || cweArray.length > 0 || sansArray.length > 0
+  };
+};
 
 // Main report generation function
 const generateReport = async (options) => {
@@ -638,7 +744,7 @@ const generateReport = async (options) => {
     const newCodePeriod = await collectors.newCodePeriod(client, options);
 
     // Combine and process data
-    const allIssues = [...issues, ...hotspots].sort((a, b) => 
+    const allIssues = [...issues, ...hotspots].sort((a, b) =>
       SEVERITY_WEIGHTS[b.severity] - SEVERITY_WEIGHTS[a.severity]
     );
 
@@ -650,6 +756,9 @@ const generateReport = async (options) => {
         }
       }
     }
+
+    // Process compliance data
+    const complianceData = processComplianceData(allIssues);
 
     // Prepare final data object
     const data = {
@@ -679,17 +788,19 @@ const generateReport = async (options) => {
       rules,
       issues: allIssues,
       qualityGateStatus,
-      qualityGateStatusPeriodDate: qualityGateStatus?.periodDate || 'N/A', // Add this line
+      qualityGateStatusPeriodDate: qualityGateStatus?.periodDate || 'N/A',
       coverage,
       deltaAnalysis: newCodePeriod ? "Yes" : "No",
+      compliance: complianceData,
+      includeCompliance: options.includeCompliance !== false, // Default to true
       summary: {
-        high: allIssues.filter(issue => 
+        high: allIssues.filter(issue =>
           issue.severity === "HIGH" || issue.severity === "BLOCKER"
         ).length,
-        medium: allIssues.filter(issue => 
+        medium: allIssues.filter(issue =>
           issue.severity === "MEDIUM"
         ).length,
-        low: allIssues.filter(issue => 
+        low: allIssues.filter(issue =>
           issue.severity === "LOW"
         ).length
       }
@@ -900,6 +1011,14 @@ const buildCommand = () => {
     .option(
       "--light-theme",
       "Enable light theme for the report (dark theme is default)"
+    )
+    .option(
+      "--include-compliance",
+      "Include compliance section with OWASP, CWE, and SANS categorization (enabled by default)"
+    )
+    .option(
+      "--no-include-compliance",
+      "Disable compliance section in the report"
     )
         .addHelpText(
           "after",

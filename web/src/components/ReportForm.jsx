@@ -46,7 +46,8 @@ import { addToReportHistory } from './ReportHistory'
 export function ReportForm() {
   const { register, handleSubmit, watch, formState: { errors } } = useForm({
     defaultValues: {
-      darkTheme: true
+      darkTheme: true,
+      includeCompliance: true
     }
   })
   const toast = useToast()
@@ -776,6 +777,19 @@ export function ReportForm() {
                     </FormLabel>
                   </Tooltip>
                   <Switch {...register('darkTheme')} defaultChecked />
+                </FormControl>
+
+                <FormControl display="flex" alignItems="center">
+                  <Tooltip
+                    label="Include compliance section showing OWASP Top 10, CWE, and SANS categorization for security audits"
+                    placement="top-start"
+                    hasArrow
+                  >
+                    <FormLabel mb="0" flex="1" cursor="help">
+                      Compliance View (OWASP/CWE)
+                    </FormLabel>
+                  </Tooltip>
+                  <Switch {...register('includeCompliance')} defaultChecked />
                 </FormControl>
               </VStack>
             </AccordionPanel>

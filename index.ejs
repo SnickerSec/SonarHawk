@@ -344,6 +344,94 @@
         </table>
       </div>
 
+      <!-- Compliance & Standards Section -->
+      <% if (includeCompliance && compliance && compliance.hasComplianceData) { %>
+      <div class="compliance section">
+        <h2>📋 Compliance & Security Standards</h2>
+
+        <!-- OWASP Top 10 -->
+        <% if (compliance.owasp && compliance.owasp.length > 0) { %>
+        <h3 style="color: var(--text-color); margin-top: 20px;">OWASP Top 10</h3>
+        <table aria-label="OWASP Top 10 Breakdown">
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th style="text-align: center;">Count</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% compliance.owasp.forEach(item => { %>
+            <tr>
+              <td><strong><%= item.category %></strong></td>
+              <td style="text-align: center;"><%= item.count %></td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+        <% } %>
+
+        <!-- CWE (Common Weakness Enumeration) -->
+        <% if (compliance.cwe && compliance.cwe.length > 0) { %>
+        <h3 style="color: var(--text-color); margin-top: 20px;">CWE (Common Weakness Enumeration)</h3>
+        <table aria-label="CWE Breakdown">
+          <thead>
+            <tr>
+              <th>CWE ID</th>
+              <th style="text-align: center;">Count</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% compliance.cwe.slice(0, 15).forEach(item => { %>
+            <tr>
+              <td>
+                <a href="https://cwe.mitre.org/data/definitions/<%= item.id.split('-')[1] %>.html"
+                   target="_blank" rel="noopener noreferrer">
+                  <%= item.id %>
+                </a>
+              </td>
+              <td style="text-align: center;"><%= item.count %></td>
+            </tr>
+            <% }) %>
+            <% if (compliance.cwe.length > 15) { %>
+            <tr>
+              <td colspan="2" style="text-align: center; font-style: italic;">
+                ... and <%= compliance.cwe.length - 15 %> more CWE categories
+              </td>
+            </tr>
+            <% } %>
+          </tbody>
+        </table>
+        <% } %>
+
+        <!-- SANS Top 25 -->
+        <% if (compliance.sans && compliance.sans.length > 0) { %>
+        <h3 style="color: var(--text-color); margin-top: 20px;">SANS Top 25</h3>
+        <table aria-label="SANS Top 25 Breakdown">
+          <thead>
+            <tr>
+              <th>SANS ID</th>
+              <th style="text-align: center;">Count</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% compliance.sans.forEach(item => { %>
+            <tr>
+              <td><%= item.id %></td>
+              <td style="text-align: center;"><%= item.count %></td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+        <% } %>
+
+        <% if (compliance.otherTags && compliance.otherTags.length > 0) { %>
+        <p style="margin-top: 15px; font-size: 14px; color: var(--text-color);">
+          <strong>Other Security Tags:</strong> <%= compliance.otherTags.join(', ') %>
+        </p>
+        <% } %>
+      </div>
+      <% } %>
+
       <!-- Vulnerability Details Section -->
       <div class="details section">
         <% if (issues.length > 0) { %>
