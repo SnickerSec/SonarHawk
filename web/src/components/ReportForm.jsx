@@ -310,6 +310,57 @@ export function ReportForm() {
               )}
             </FormControl>
 
+            <Divider />
+
+            {/* Authentication Fields */}
+            <FormControl>
+              <Tooltip
+                label="Generate a token in SonarQube: User > My Account > Security > Generate Tokens"
+                placement="top-start"
+                hasArrow
+              >
+                <FormLabel cursor="help">Auth Token (Recommended)</FormLabel>
+              </Tooltip>
+              <Input
+                type="password"
+                {...register('sonartoken')}
+                placeholder="squ_..."
+              />
+              <Text fontSize="sm" color="gray.500" mt={1}>
+                SonarQube authentication token
+              </Text>
+            </FormControl>
+
+            <Text fontSize="sm" fontWeight="bold" color="gray.600" alignSelf="flex-start">
+              OR use Username/Password:
+            </Text>
+
+            <FormControl>
+              <FormLabel>Username</FormLabel>
+              <Input {...register('sonarusername')} placeholder="admin" />
+            </FormControl>
+
+            <FormControl>
+              <FormLabel>Password</FormLabel>
+              <Input type="password" {...register('sonarpassword')} placeholder="••••••••" />
+            </FormControl>
+
+            <FormControl>
+              <Tooltip
+                label="Required only for SonarCloud.io projects"
+                placement="top-start"
+                hasArrow
+              >
+                <FormLabel cursor="help">Organization (SonarCloud only)</FormLabel>
+              </Tooltip>
+              <Input
+                {...register('sonarorganization')}
+                placeholder="my-org"
+              />
+            </FormControl>
+
+            <Divider />
+
             {/* Test Connection Button */}
             <Button
               onClick={testConnection}
@@ -345,64 +396,6 @@ export function ReportForm() {
 
         {/* Accordion for organized options */}
         <Accordion allowMultiple>
-
-          {/* Authentication */}
-          <AccordionItem>
-            <h2>
-              <AccordionButton>
-                <Box flex="1" textAlign="left">
-                  <Heading size="sm">Authentication</Heading>
-                </Box>
-                <AccordionIcon />
-              </AccordionButton>
-            </h2>
-            <AccordionPanel pb={4}>
-              <VStack spacing={4}>
-                <FormControl>
-                  <Tooltip
-                    label="Generate a token in SonarQube: User > My Account > Security > Generate Tokens"
-                    placement="top-start"
-                    hasArrow
-                  >
-                    <FormLabel cursor="help">Auth Token (Recommended)</FormLabel>
-                  </Tooltip>
-                  <Input
-                    type="password"
-                    {...register('sonartoken')}
-                    placeholder="squ_..."
-                  />
-                  <Text fontSize="sm" color="gray.500" mt={1}>
-                    SonarQube authentication token
-                  </Text>
-                </FormControl>
-
-                <Text fontSize="sm" fontWeight="bold" color="gray.600" alignSelf="flex-start">
-                  OR use Username/Password:
-                </Text>
-
-                <FormControl>
-                  <FormLabel>Username</FormLabel>
-                  <Input {...register('sonarusername')} />
-                </FormControl>
-
-                <FormControl>
-                  <FormLabel>Password</FormLabel>
-                  <Input type="password" {...register('sonarpassword')} />
-                </FormControl>
-
-                <FormControl>
-                  <FormLabel>Organization (SonarCloud only)</FormLabel>
-                  <Input
-                    {...register('sonarorganization')}
-                    placeholder="my-org"
-                  />
-                  <Text fontSize="sm" color="gray.500" mt={1}>
-                    Required only for SonarCloud.io
-                  </Text>
-                </FormControl>
-              </VStack>
-            </AccordionPanel>
-          </AccordionItem>
 
           {/* Project Metadata */}
           <AccordionItem>
