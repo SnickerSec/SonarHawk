@@ -12,6 +12,7 @@ import { getProxyForUrl } from 'proxy-from-env';
 import Bottleneck from 'bottleneck';
 import QuickLRU from 'quick-lru';
 import { homedir } from 'os';
+import { env } from 'process';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -722,6 +723,122 @@ function calculateTrends(history) {
   };
 }
 
+// Slack Integration
+async function sendSlackNotification(reportData, options) {
+  const webhookUrl = options.slackWebhook || env.SLACK_WEBHOOK_URL;
+
+  if (!webhookUrl) {
+    console.error('No Slack webhook URL provided. Use --slack-webhook or set SLACK_WEBHOOK_URL environment variable.');
+    return;
+  }
+
+  try {
+    // Check thresholds
+    const shouldNotify = !options.slackThreshold ||
+      reportData.summary.high >= (options.slackThreshold || 0);
+
+    if (!shouldNotify) {
+      console.error(`Slack notification skipped: High severity (${reportData.summary.high}) below threshold (${options.slackThreshold})`);
+      return;
+    }
+
+    // Determine severity color
+    let color = '#36a64f'; // Green (good)
+    if (reportData.summary.high > 0) {
+      color = '#d9534f'; // Red (critical)
+    } else if (reportData.summary.medium > 5) {
+      color = '#f0ad4e'; // Orange (warning)
+    }
+
+    // Build trend text
+    let trendText = '';
+    if (reportData.trendAnalysis && reportData.trendAnalysis.hasTrendData) {
+      const trend = reportData.trendAnalysis.deltas.total;
+      const emoji = trend.direction === 'down' ? '📉' : trend.direction === 'up' ? '📈' : '➡️';
+      const sign = trend.value > 0 ? '+' : '';
+      trendText = `\n*Trend:* ${emoji} ${sign}${trend.value} issues (${sign}${trend.percent}% vs previous report)`;
+    }
+
+    // Create Slack message
+    const message = {
+      username: 'SonarHawk',
+      icon_emoji: ':hawk:',
+      attachments: [
+        {
+          color: color,
+          title: `🔒 Security Report: ${reportData.projectName || reportData.sonarComponent}`,
+          title_link: reportData.reportUrl || `${reportData.sonarBaseURL}/dashboard?id=${reportData.sonarComponent}`,
+          fields: [
+            {
+              title: 'High Severity',
+              value: reportData.summary.high.toString(),
+              short: true
+            },
+            {
+              title: 'Medium Severity',
+              value: reportData.summary.medium.toString(),
+              short: true
+            },
+            {
+              title: 'Low Severity',
+              value: reportData.summary.low.toString(),
+              short: true
+            },
+            {
+              title: 'Total Issues',
+              value: (reportData.summary.high + reportData.summary.medium + reportData.summary.low).toString(),
+              short: true
+            }
+          ],
+          footer: `SonarHawk • Generated on ${reportData.date}`,
+          footer_icon: 'https://www.sonarqube.org/logos/index/sonarqube-logo.png',
+          text: `📊 *Branch:* ${reportData.branch || 'main'}${trendText}`,
+          mrkdwn_in: ['text', 'fields']
+        }
+      ]
+    };
+
+    // Add compliance summary if available
+    if (reportData.compliance && reportData.compliance.hasComplianceData) {
+      const complianceFields = [];
+
+      if (reportData.compliance.owasp && reportData.compliance.owasp.length > 0) {
+        const topOwasp = reportData.compliance.owasp.slice(0, 3).map(o => `${o.category}: ${o.count}`).join('\n');
+        complianceFields.push({
+          title: 'Top OWASP Categories',
+          value: topOwasp,
+          short: false
+        });
+      }
+
+      if (complianceFields.length > 0) {
+        message.attachments.push({
+          color: '#563d7c',
+          title: '📋 Compliance Summary',
+          fields: complianceFields,
+          mrkdwn_in: ['text', 'fields']
+        });
+      }
+    }
+
+    // Send to Slack
+    console.error('Sending notification to Slack...');
+    const response = await got.post(webhookUrl, {
+      json: message,
+      timeout: { request: 10000 }
+    });
+
+    if (response.statusCode === 200) {
+      console.error('✓ Slack notification sent successfully');
+    } else {
+      console.error(`✗ Slack notification failed: ${response.statusCode}`);
+    }
+
+  } catch (error) {
+    console.error('Failed to send Slack notification:', error.message);
+  }
+}
+
 // Process compliance data from issues
 const processComplianceData = (issues) => {
   const compliance = {
@@ -1098,6 +1215,11 @@ const generateReport = async (options) => {
     // Generate reports
     await generateOutput(data, options);
 
+    // Send Slack notification if requested
+    if (options.slackWebhook || env.SLACK_WEBHOOK_URL) {
+      await sendSlackNotification(data, options);
+    }
+
     // Print summary to console
     console.error(await ejs.renderFile(
       resolve(__dirname, "summary.txt.ejs"),
@@ -1160,6 +1282,73 @@ async function generatePortfolioOutput(data, options) {
   }
 }
 
+// Custom Dashboard Configuration
+const DASHBOARD_PRESETS = {
+  executive: {
+    name: 'Executive Dashboard',
+    description: 'High-level overview for executives',
+    sections: ['summary', 'trends', 'qualityGate', 'compliance'],
+    hideDetails: true,
+    emphasize: ['high']
+  },
+  developer: {
+    name: 'Developer Dashboard',
+    description: 'Detailed view for developers',
+    sections: ['summary', 'details', 'rules', 'compliance'],
+    hideDetails: false,
+    emphasize: ['high', 'medium']
+  },
+  security: {
+    name: 'Security Team Dashboard',
+    description: 'Security-focused view',
+    sections: ['summary', 'compliance', 'details', 'trends', 'rules'],
+    hideDetails: false,
+    emphasize: ['high', 'medium', 'low']
+  },
+  audit: {
+    name: 'Audit & Compliance Dashboard',
+    description: 'Compliance-focused for auditors',
+    sections: ['summary', 'compliance', 'qualityGate'],
+    hideDetails: true,
+    emphasize: ['high']
+  },
+  minimal: {
+    name: 'Minimal Dashboard',
+    description: 'Essential information only',
+    sections: ['summary'],
+    hideDetails: true,
+    emphasize: ['high']
+  }
+};
+
+async function loadDashboardConfig(options) {
+  // Check for custom dashboard config file
+  if (options.dashboardConfig) {
+    try {
+      const configPath = resolve(options.dashboardConfig);
+      if (existsSync(configPath)) {
+        const configData = await readFile(configPath, 'utf-8');
+        return JSON.parse(configData);
+      }
+    } catch (error) {
+      console.error(`Failed to load dashboard config: ${error.message}`);
+    }
+  }
+
+  // Use preset if specified
+  if (options.dashboardPreset && DASHBOARD_PRESETS[options.dashboardPreset]) {
+    return DASHBOARD_PRESETS[options.dashboardPreset];
+  }
+
+  // Default: all sections
+  return {
+    name: 'Default Dashboard',
+    sections: ['summary', 'trends', 'compliance', 'details', 'rules', 'qualityGate'],
+    hideDetails: false,
+    emphasize: ['high', 'medium', 'low']
+  };
+}
+
 // Output generation
 async function generateOutput(data, options) {
   // Save JSON report if requested
@@ -1201,13 +1390,28 @@ async function generateOutput(data, options) {
       throw new Error(`Template file not found: ${templateFile}`);
     }
 
+    // Load dashboard configuration
+    const dashboardConfig = await loadDashboardConfig(options);
+    console.error(`using dashboard: ${dashboardConfig.name}`);
+
+    // Filter issues based on dashboard.emphasize if specified
+    let filteredIssues = data.issues;
+    if (dashboardConfig.emphasize && dashboardConfig.emphasize.length > 0) {
+      const emphasizeSeverities = dashboardConfig.emphasize.map(s => s.toUpperCase());
+      filteredIssues = data.issues.filter(issue =>
+        emphasizeSeverities.includes(issue.severity)
+      );
+    }
+
     const renderedFile = await ejs.renderFile(
       templateFile,
       {
         ...data,
+        issues: filteredIssues,
         stylesheet,
         lightTheme: options.lightTheme === true,
-        darkTheme: !options.lightTheme
+        darkTheme: !options.lightTheme,
+        dashboard: dashboardConfig
       },
       {}
     );
@@ -1371,6 +1575,27 @@ const buildCommand = () => {
       "Number of days to include in trend analysis (default: 90)",
       "90"
     )
+    .option(
+      "--slack-webhook <url>",
+      "Slack webhook URL for notifications (or set SLACK_WEBHOOK_URL env var)"
+    )
+    .option(
+      "--slack-threshold <number>",
+      "Only send Slack notification if high severity issues >= threshold",
+      "0"
+    )
+    .option(
+      "--slack-channel <channel>",
+      "Slack channel for notifications (optional, webhook default is used if not specified)"
+    )
+    .option(
+      "--dashboard-preset <preset>",
+      "Use a predefined dashboard layout: executive, developer, security, audit, minimal"
+    )
+    .option(
+      "--dashboard-config <file>",
+      "Custom dashboard configuration JSON file"
+    )
         .addHelpText(
           "after",
           `
@@ -1409,10 +1634,55 @@ const buildCommand = () => {
       Export to PDF:
         Open the generated HTML report in a browser and click "Export to PDF" button (or press Ctrl/Cmd+P)
 
+      Slack Integration (send notifications to Slack):
+        # Basic Slack notification
+        sonarhawk --project=MyProject --sonarurl=https://sonarqube.company.com --sonarcomponent=myapp:main --sonartoken=xxx --slack-webhook=https://hooks.slack.com/services/YOUR/WEBHOOK/URL --output=report.html
+
+        # Only notify if high severity >= 5
+        sonarhawk --project=MyProject --sonarurl=https://sonarqube.company.com --sonarcomponent=myapp:main --sonartoken=xxx --slack-webhook=https://hooks.slack.com/services/YOUR/WEBHOOK/URL --slack-threshold=5 --output=report.html
+
+        # Use environment variable for webhook
+        export SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK/URL
+        sonarhawk --project=MyProject --sonarurl=https://sonarqube.company.com --sonarcomponent=myapp:main --sonartoken=xxx --output=report.html
+
+      Custom Dashboards (different views for different audiences):
+        # Executive dashboard (high-level overview)
+        sonarhawk --project=MyProject --sonarurl=https://sonarqube.company.com --sonarcomponent=myapp:main --sonartoken=xxx --dashboard-preset=executive --output=executive-report.html
+
+        # Developer dashboard (detailed view with code issues)
+        sonarhawk --project=MyProject --sonarurl=https://sonarqube.company.com --sonarcomponent=myapp:main --sonartoken=xxx --dashboard-preset=developer --output=dev-report.html
+
+        # Security team dashboard (security-focused)
+        sonarhawk --project=MyProject --sonarurl=https://sonarqube.company.com --sonarcomponent=myapp:main --sonartoken=xxx --dashboard-preset=security --output=security-report.html
+
+        # Audit & compliance dashboard
+        sonarhawk --project=MyProject --sonarurl=https://sonarqube.company.com --sonarcomponent=myapp:main --sonartoken=xxx --dashboard-preset=audit --output=audit-report.html
+
+        # Custom dashboard from JSON config
+        sonarhawk --project=MyProject --sonarurl=https://sonarqube.company.com --sonarcomponent=myapp:main --sonartoken=xxx --dashboard-config=my-dashboard.json --output=custom-report.html
+
+      Dashboard Presets:
+        - executive: High-level summary, trends, quality gates (for management)
+        - developer: Detailed issues, rules, compliance (for dev teams)
+        - security: Security focus with compliance data (for security teams)
+        - audit: Compliance and quality gates only (for auditors)
+        - minimal: Essential summary only (for quick checks)
+
+      Custom Dashboard JSON Format:
+        {
+          "name": "My Custom Dashboard",
+          "description": "Custom view for my team",
+          "sections": ["summary", "trends", "compliance", "details", "rules", "qualityGate"],
+          "hideDetails": false,
+          "emphasize": ["high", "medium"]
+        }
+
       Notes:
         - Trend data is stored in ~/.sonarhawk/trends/
         - Run with --save-trend-data regularly (e.g., in CI/CD) to build historical data
         - At least 2 snapshots are needed for trend analysis
+        - Get Slack webhook URL from: https://api.slack.com/messaging/webhooks
+        - Slack notifications include trend data if available
     `
         );
     

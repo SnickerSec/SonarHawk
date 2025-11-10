@@ -423,7 +423,7 @@
       </div>
 
       <!-- Quality Gate Status Section -->
-      <% if (qualityGateStatus) { %>
+      <% if (qualityGateStatus && (!dashboard.sections || dashboard.sections.includes('qualityGate'))) { %>
       <div class="quality-gate-status section">
         <h2>Quality Gate Status</h2>
         <p>
@@ -440,7 +440,7 @@
       <% } %>
 
       <!-- Trend Analysis Section -->
-      <% if (trendAnalysis && trendAnalysis.hasTrendData) { %>
+      <% if (trendAnalysis && trendAnalysis.hasTrendData && (!dashboard.sections || dashboard.sections.includes('trends'))) { %>
       <div class="section">
         <h2>📈 Trend Analysis</h2>
         <div class="trend-period">
@@ -526,6 +526,7 @@
       <% } %>
 
       <!-- Vulnerability Summary Section -->
+      <% if (!dashboard.sections || dashboard.sections.includes('summary')) { %>
       <div class="summary section">
         <h2>Summary of Detected <%= vulnerabilityPluralPhrase %></h2>
         <table aria-label="Vulnerability Summary">
@@ -551,9 +552,10 @@
           </tbody>
         </table>
       </div>
+      <% } %>
 
       <!-- Compliance & Standards Section -->
-      <% if (includeCompliance && compliance && compliance.hasComplianceData) { %>
+      <% if (includeCompliance && compliance && compliance.hasComplianceData && (!dashboard.sections || dashboard.sections.includes('compliance'))) { %>
       <div class="compliance section">
         <h2>📋 Compliance & Security Standards</h2>
 
@@ -641,6 +643,7 @@
       <% } %>
 
       <!-- Vulnerability Details Section -->
+      <% if (!dashboard.hideDetails && (!dashboard.sections || dashboard.sections.includes('details'))) { %>
       <div class="details section">
         <% if (issues.length > 0) { %>
         <h2>Detail of Detected <%= vulnerabilityPluralPhrase %></h2>
@@ -685,6 +688,7 @@
         <p>No vulnerabilities detected.</p>
         <% } %>
       </div>
+      <% } %>
     </div>
     <script>
       function exportToPDF() {
