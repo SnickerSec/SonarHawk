@@ -519,7 +519,7 @@ export function ReportForm() {
                       message: 'Please enter a valid domain'
                     }
                   })}
-                  placeholder="sonarqube.intellum.com"
+                  placeholder="sonarqube.example.com"
                   type="text"
                 />
               </InputGroup>
