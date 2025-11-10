@@ -312,7 +312,7 @@ export function ReportForm() {
 
             <Divider />
 
-            {/* Authentication Fields */}
+            {/* Authentication - Token */}
             <FormControl>
               <Tooltip
                 label="Generate a token in SonarQube: User > My Account > Security > Generate Tokens"
@@ -331,33 +331,48 @@ export function ReportForm() {
               </Text>
             </FormControl>
 
-            <Text fontSize="sm" fontWeight="bold" color="gray.600" alignSelf="flex-start">
-              OR use Username/Password:
-            </Text>
+            {/* Alternative Authentication */}
+            <Accordion allowToggle>
+              <AccordionItem border="none">
+                <h2>
+                  <AccordionButton px={0}>
+                    <Box flex="1" textAlign="left">
+                      <Text fontSize="sm" fontWeight="bold" color="gray.600">
+                        OR use Username/Password
+                      </Text>
+                    </Box>
+                    <AccordionIcon />
+                  </AccordionButton>
+                </h2>
+                <AccordionPanel px={0} pb={4}>
+                  <VStack spacing={4}>
+                    <FormControl>
+                      <FormLabel>Username</FormLabel>
+                      <Input {...register('sonarusername')} placeholder="admin" />
+                    </FormControl>
 
-            <FormControl>
-              <FormLabel>Username</FormLabel>
-              <Input {...register('sonarusername')} placeholder="admin" />
-            </FormControl>
+                    <FormControl>
+                      <FormLabel>Password</FormLabel>
+                      <Input type="password" {...register('sonarpassword')} placeholder="••••••••" />
+                    </FormControl>
 
-            <FormControl>
-              <FormLabel>Password</FormLabel>
-              <Input type="password" {...register('sonarpassword')} placeholder="••••••••" />
-            </FormControl>
-
-            <FormControl>
-              <Tooltip
-                label="Required only for SonarCloud.io projects"
-                placement="top-start"
-                hasArrow
-              >
-                <FormLabel cursor="help">Organization (SonarCloud only)</FormLabel>
-              </Tooltip>
-              <Input
-                {...register('sonarorganization')}
-                placeholder="my-org"
-              />
-            </FormControl>
+                    <FormControl>
+                      <Tooltip
+                        label="Required only for SonarCloud.io projects"
+                        placement="top-start"
+                        hasArrow
+                      >
+                        <FormLabel cursor="help">Organization (SonarCloud only)</FormLabel>
+                      </Tooltip>
+                      <Input
+                        {...register('sonarorganization')}
+                        placeholder="my-org"
+                      />
+                    </FormControl>
+                  </VStack>
+                </AccordionPanel>
+              </AccordionItem>
+            </Accordion>
 
             <Divider />
 
