@@ -689,6 +689,12 @@ app.post('/api/generate', generateLimiter, async (req, res) => {
       onlyDetectedRules: req.body.onlyDetectedRules === true,
       fixMissingRule: req.body.fixMissingRule === true,
       darkTheme: req.body.darkTheme !== false, // Default true
+      includeCompliance: req.body.includeCompliance === true,
+      saveTrendData: req.body.saveTrendData === true,
+      includeTrends: req.body.includeTrends === true,
+      // Slack Integration
+      slackWebhook: req.body.enableSlack === true ? req.body.slackWebhook : undefined,
+      slackThreshold: req.body.enableSlack === true && req.body.slackThreshold ? parseInt(req.body.slackThreshold, 10) : undefined,
       vulnerabilityPhrase: req.body.vulnerabilityPhrase,
       vulnerabilityPluralPhrase: req.body.vulnerabilityPluralPhrase,
       httpProxy: req.body.httpProxy,

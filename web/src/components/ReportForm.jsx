@@ -852,6 +852,77 @@ export function ReportForm() {
             </AccordionPanel>
           </AccordionItem>
 
+          {/* Notifications */}
+          <AccordionItem>
+            <h2>
+              <AccordionButton>
+                <Box flex="1" textAlign="left">
+                  <Heading size="sm">Notifications</Heading>
+                </Box>
+                <AccordionIcon />
+              </AccordionButton>
+            </h2>
+            <AccordionPanel pb={4}>
+              <VStack spacing={4}>
+                <FormControl>
+                  <Tooltip
+                    label="Send security report summary to Slack channel using an Incoming Webhook"
+                    placement="top-start"
+                    hasArrow
+                  >
+                    <FormLabel cursor="help">Slack Webhook URL</FormLabel>
+                  </Tooltip>
+                  <Input
+                    {...register('slackWebhook')}
+                    placeholder="https://hooks.slack.com/services/YOUR/WEBHOOK/URL"
+                    type="url"
+                  />
+                  <Text fontSize="sm" color="gray.500" mt={1}>
+                    Get webhook URL from:{' '}
+                    <Link href="https://api.slack.com/messaging/webhooks" isExternal color="blue.500">
+                      api.slack.com/messaging/webhooks
+                    </Link>
+                  </Text>
+                </FormControl>
+
+                <FormControl>
+                  <Tooltip
+                    label="Only send Slack notification if high severity issues are greater than or equal to this threshold (prevents spam)"
+                    placement="top-start"
+                    hasArrow
+                  >
+                    <FormLabel cursor="help">Notification Threshold</FormLabel>
+                  </Tooltip>
+                  <Input
+                    {...register('slackThreshold', {
+                      valueAsNumber: true
+                    })}
+                    placeholder="0"
+                    type="number"
+                    min="0"
+                    defaultValue="0"
+                  />
+                  <Text fontSize="sm" color="gray.500" mt={1}>
+                    Minimum high severity issues to trigger notification (0 = always notify)
+                  </Text>
+                </FormControl>
+
+                <FormControl display="flex" alignItems="center">
+                  <Tooltip
+                    label="Enable this to send Slack notifications when reports are generated"
+                    placement="top-start"
+                    hasArrow
+                  >
+                    <FormLabel mb="0" flex="1" cursor="help">
+                      Enable Slack Notifications
+                    </FormLabel>
+                  </Tooltip>
+                  <Switch {...register('enableSlack')} />
+                </FormControl>
+              </VStack>
+            </AccordionPanel>
+          </AccordionItem>
+
           {/* Project Metadata */}
           <AccordionItem>
             <h2>
