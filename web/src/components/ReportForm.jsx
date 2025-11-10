@@ -59,6 +59,7 @@ export function ReportForm() {
 
   // Watch SonarQube URL for dynamic token link
   const sonarUrl = watch('sonarurl')
+  const sonarComponent = watch('sonarcomponent')
 
   // Generate token URL based on user's SonarQube instance
   const getTokenUrl = () => {
@@ -76,6 +77,26 @@ export function ReportForm() {
   }
 
   const tokenUrl = getTokenUrl()
+
+  // Auto-test connectivity when URL changes
+  useEffect(() => {
+    // Validate URL format before testing
+    const urlPattern = /^https?:\/\/.+/
+    if (!sonarUrl || !urlPattern.test(sonarUrl)) {
+      setConnectionStatus(null)
+      return
+    }
+
+    // Debounce the connectivity test
+    const timeoutId = setTimeout(() => {
+      // Only auto-test if we have both URL and component
+      if (sonarUrl && sonarComponent && !isTesting && !isGenerating) {
+        testConnection()
+      }
+    }, 1000) // Wait 1 second after user stops typing
+
+    return () => clearTimeout(timeoutId)
+  }, [sonarUrl, sonarComponent])
 
   // Keyboard shortcuts: Ctrl+Enter (or Cmd+Enter on Mac) to submit
   useEffect(() => {
@@ -281,13 +302,26 @@ export function ReportForm() {
           <Heading size="md" mb={4}>Required Configuration</Heading>
           <VStack spacing={4}>
             <FormControl isRequired isInvalid={errors.sonarurl}>
-              <Tooltip
-                label="The base URL of your SonarQube or SonarCloud instance"
-                placement="top-start"
-                hasArrow
-              >
-                <FormLabel cursor="help">SonarQube URL</FormLabel>
-              </Tooltip>
+              <HStack justify="space-between">
+                <Tooltip
+                  label="The base URL of your SonarQube or SonarCloud instance"
+                  placement="top-start"
+                  hasArrow
+                >
+                  <FormLabel cursor="help">SonarQube URL</FormLabel>
+                </Tooltip>
+                {isTesting && (
+                  <HStack spacing={1}>
+                    <Spinner size="xs" />
+                    <Text fontSize="xs" color="gray.500">Testing...</Text>
+                  </HStack>
+                )}
+                {connectionStatus && !isTesting && (
+                  <Badge colorScheme={connectionStatus.success ? 'green' : 'red'} fontSize="xs">
+                    {connectionStatus.success ? 'Connected' : 'Failed'}
+                  </Badge>
+                )}
+              </HStack>
               <Input
                 {...register('sonarurl', {
                   required: 'SonarQube URL is required',
@@ -428,7 +462,7 @@ export function ReportForm() {
               size="sm"
               width="full"
             >
-              Test Connection
+              {connectionStatus ? 'Retry Connection Test' : 'Test Connection'}
             </Button>
 
             {/* Connection Status */}
