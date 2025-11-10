@@ -1,0 +1,76 @@
+name: CodeQL Autofix
+
+on:
+  schedule:
+    # Run weekly on Sunday at 00:00 UTC
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  security-events: read
+
+jobs:
+  autofix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check for security alerts
+        id: check-alerts
+        run: |
+          ALERTS=$(gh api repos/${{ github.repository }}/code-scanning/alerts \
+            --jq '[.[] | select(.state == "open")] | length')
+          echo "count=$ALERTS" >> $GITHUB_OUTPUT
+          echo "Found $ALERTS open security alerts"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run npm audit fix
+        if: steps.check-alerts.outputs.count > 0
+        run: |
+          npm audit fix --audit-level=moderate
+
+      - name: Create Pull Request for fixes
+        if: steps.check-alerts.outputs.count > 0
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: |
+            fix: Apply automated security fixes
+
+            Automated fixes for security vulnerabilities detected by CodeQL and npm audit.
+          branch: automated-security-fixes
+          delete-branch: true
+          title: 'fix: Automated security vulnerability fixes'
+          body: |
+            ## Automated Security Fixes
+
+            This PR contains automated fixes for security vulnerabilities detected by:
+            - CodeQL code scanning
+            - npm audit
+
+            ### Changes
+            - Applied `npm audit fix` for moderate and higher severity issues
+
+            ### Review Checklist
+            - [ ] All tests pass
+            - [ ] No breaking changes introduced
+            - [ ] Security alerts resolved
+
+            **Note:** This PR was automatically created by the CodeQL Autofix workflow.
+          labels: |
+            security
+            automated
+            dependencies
