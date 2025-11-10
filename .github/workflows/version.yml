@@ -22,12 +22,28 @@ jobs:
           BRANCH_NAME=${GITHUB_HEAD_REF#refs/heads/}
           EXPECTED_BRANCH="release/v${PKG_VERSION}"
 
-          if [[ "$BRANCH_NAME" != "$EXPECTED_BRANCH" ]]; then
-            echo "Error: Branch name should be '$EXPECTED_BRANCH' for version $PKG_VERSION"
-            exit 1
-          fi
+          # Only enforce strict checks for release branches
+          if [[ "$BRANCH_NAME" == release/* ]]; then
+            if [[ "$BRANCH_NAME" != "$EXPECTED_BRANCH" ]]; then
+              echo "Error: Branch name should be '$EXPECTED_BRANCH' for version $PKG_VERSION"
+              exit 1
+            fi
 
-          if ! grep -q "## \[$PKG_VERSION\]" CHANGELOG.md; then
-            echo "Error: Version $PKG_VERSION not found in CHANGELOG.md"
-            exit 1
+            if ! grep -q "## \[$PKG_VERSION\]" CHANGELOG.md; then
+              echo "Error: Version $PKG_VERSION not found in CHANGELOG.md"
+              exit 1
+            fi
+
+            echo "✓ Release branch validation passed"
+          else
+            # For non-release branches, just show warnings
+            if [[ "$BRANCH_NAME" != "$EXPECTED_BRANCH" ]]; then
+              echo "ℹ️  Info: This is not a release branch (expected: '$EXPECTED_BRANCH')"
+            fi
+
+            if ! grep -q "## \[$PKG_VERSION\]" CHANGELOG.md; then
+              echo "⚠️  Warning: Version $PKG_VERSION not found in CHANGELOG.md"
+            fi
+
+            echo "✓ Non-release branch - checks skipped"
           fi
