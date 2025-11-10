@@ -26,7 +26,7 @@ export function ReportHistory() {
 
   const loadHistory = () => {
     try {
-      const stored = localStorage.getItem('sonarhawk_report_history')
+      const stored = localStorage.getItem('codeguard_report_history')
       if (stored) {
         setHistory(JSON.parse(stored))
       }
@@ -36,13 +36,13 @@ export function ReportHistory() {
   }
 
   const clearHistory = () => {
-    localStorage.removeItem('sonarhawk_report_history')
+    localStorage.removeItem('codeguard_report_history')
     setHistory([])
   }
 
   const removeItem = (timestamp) => {
     const updated = history.filter(item => item.timestamp !== timestamp)
-    localStorage.setItem('sonarhawk_report_history', JSON.stringify(updated))
+    localStorage.setItem('codeguard_report_history', JSON.stringify(updated))
     setHistory(updated)
   }
 
@@ -148,7 +148,7 @@ export function ReportHistory() {
 // Helper function to add report to history (export for use in ReportForm)
 export const addToReportHistory = (reportData) => {
   try {
-    const stored = localStorage.getItem('sonarhawk_report_history')
+    const stored = localStorage.getItem('codeguard_report_history')
     const history = stored ? JSON.parse(stored) : []
 
     const newEntry = {
@@ -162,7 +162,7 @@ export const addToReportHistory = (reportData) => {
 
     // Add to beginning and limit to MAX_HISTORY
     const updated = [newEntry, ...history].slice(0, MAX_HISTORY)
-    localStorage.setItem('sonarhawk_report_history', JSON.stringify(updated))
+    localStorage.setItem('codeguard_report_history', JSON.stringify(updated))
   } catch (error) {
     console.error('Failed to save to report history:', error)
   }

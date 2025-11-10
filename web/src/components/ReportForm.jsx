@@ -421,7 +421,7 @@ export function ReportForm() {
       const url = window.URL.createObjectURL(reportBlob)
       const a = document.createElement('a')
       a.href = url
-      a.download = 'sonarhawk-report.html'
+      a.download = 'codeguard-report.html'
       a.click()
       window.URL.revokeObjectURL(url)
       onClose()

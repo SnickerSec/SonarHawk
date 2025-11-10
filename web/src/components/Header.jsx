@@ -26,9 +26,9 @@ export function Header() {
         </Tooltip>
       </HStack>
       <Icon as={FaChartBar} w={10} h={10} color="blue.500" mb={2} />
-      <Heading size="xl" mb={2}>SonarHawk</Heading>
+      <Heading size="xl" mb={2}>CodeGuard</Heading>
       <Text fontSize="lg" color="gray.500" mb={4}>
-        Generate enhanced SonarQube vulnerability reports
+        Advanced Security Reporting & Vulnerability Management
       </Text>
       <Button
         leftIcon={<FaEye />}
