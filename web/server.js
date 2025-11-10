@@ -56,6 +56,93 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Connection test endpoint
+app.post('/api/test-connection', async (req, res) => {
+  try {
+    process.chdir(projectRoot);
+
+    const { SonarClient } = await import('../index.js');
+
+    // Validate required fields
+    if (!req.body.sonarurl) {
+      return res.status(400).json({
+        success: false,
+        error: 'SonarQube URL is required'
+      });
+    }
+
+    if (!req.body.sonarcomponent) {
+      return res.status(400).json({
+        success: false,
+        error: 'Project key/component is required'
+      });
+    }
+
+    // Create client
+    const client = new (SonarClient || class {
+      constructor(opts) {
+        const module = await import('../index.js');
+        // Use the actual implementation
+      }
+    })({
+      sonarUrl: req.body.sonarurl,
+      sonarToken: req.body.sonartoken,
+      sonarUsername: req.body.sonarusername,
+      sonarPassword: req.body.sonarpassword,
+      debug: false
+    });
+
+    // Test connection by getting server version
+    const status = await client.get('/api/system/status');
+
+    // Test authentication if credentials provided
+    if (req.body.sonartoken || (req.body.sonarusername && req.body.sonarpassword)) {
+      await client.authenticate({
+        token: req.body.sonartoken,
+        username: req.body.sonarusername,
+        password: req.body.sonarpassword
+      });
+    }
+
+    // Test project access
+    await client.get(`/api/projects/search?projects=${encodeURIComponent(req.body.sonarcomponent)}`);
+
+    res.json({
+      success: true,
+      message: 'Connection successful',
+      server: {
+        version: status.version,
+        status: status.status
+      }
+    });
+  } catch (error) {
+    console.error('Connection test failed:', error);
+
+    let errorMessage = 'Connection test failed';
+    let statusCode = 500;
+
+    if (error.message?.includes('ENOTFOUND') || error.message?.includes('ECONNREFUSED')) {
+      errorMessage = 'Cannot reach SonarQube server. Please check the URL and network connection.';
+      statusCode = 400;
+    } else if (error.statusCode === 401 || error.message?.includes('Authentication failed')) {
+      errorMessage = 'Authentication failed. Please check your credentials.';
+      statusCode = 401;
+    } else if (error.statusCode === 403) {
+      errorMessage = 'Access denied. Please check your permissions.';
+      statusCode = 403;
+    } else if (error.statusCode === 404) {
+      errorMessage = 'Project not found. Please check the project key.';
+      statusCode = 404;
+    }
+
+    res.status(statusCode).json({
+      success: false,
+      error: errorMessage,
+      details: isDev ? error.message : undefined
+    });
+  }
+});
+
 // Serve static files in production
 if (!isDev) {
   const distPath = join(__dirname, 'dist');
