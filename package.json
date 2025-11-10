@@ -36,7 +36,7 @@
   ],
   "dependencies": {
     "bottleneck": "^2.19.5",
-    "commander": "^13.1.0",
+    "commander": "^14.0.2",
     "ejs": "^3.1.10",
     "got": "^14.4.7",
     "hpagent": "^1.2.0",
