@@ -91,140 +91,416 @@ app.get('/api/demo', async (req, res) => {
       // If demo generation fails, serve a demo HTML page explaining the report
       const demoHtml = `
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SonarHawk Demo Report</title>
   <style>
+    :root {
+      --bg-primary: #1a1a2e;
+      --bg-secondary: #16213e;
+      --bg-tertiary: #0f3460;
+      --text-primary: #eaeaea;
+      --text-secondary: #a8a8a8;
+      --border-color: #2d2d44;
+      --accent-color: #667eea;
+      --success-color: #10b981;
+      --warning-color: #f59e0b;
+      --danger-color: #ef4444;
+      --critical-color: #dc2626;
+    }
+
+    [data-theme="light"] {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f8f9fa;
+      --bg-tertiary: #e9ecef;
+      --text-primary: #333333;
+      --text-secondary: #666666;
+      --border-color: #dee2e6;
+      --accent-color: #667eea;
+      --success-color: #10b981;
+      --warning-color: #f59e0b;
+      --danger-color: #ef4444;
+      --critical-color: #dc2626;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: var(--bg-primary);
+      color: var(--text-primary);
       margin: 0;
-      padding: 40px 20px;
-      min-height: 100vh;
+      padding: 20px;
+      transition: background-color 0.3s, color 0.3s;
     }
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-      background: white;
+
+    .header {
+      max-width: 1200px;
+      margin: 0 auto 30px;
+      padding: 30px;
+      background: var(--bg-secondary);
       border-radius: 12px;
-      padding: 40px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
-    h1 {
-      color: #333;
-      margin-top: 0;
+
+    .header-content h1 {
       font-size: 2.5em;
+      margin-bottom: 10px;
     }
-    .subtitle {
-      color: #666;
-      font-size: 1.2em;
+
+    .header-content .subtitle {
+      color: var(--text-secondary);
+      font-size: 1.1em;
+    }
+
+    .theme-toggle {
+      background: var(--accent-color);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1em;
+      transition: opacity 0.3s;
+    }
+
+    .theme-toggle:hover {
+      opacity: 0.9;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
       margin-bottom: 30px;
     }
-    .feature {
-      background: #f8f9fa;
-      padding: 20px;
-      margin: 20px 0;
-      border-radius: 8px;
-      border-left: 4px solid #667eea;
+
+    .stat-card {
+      background: var(--bg-secondary);
+      padding: 24px;
+      border-radius: 12px;
+      border-left: 4px solid var(--accent-color);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    .feature h3 {
-      margin-top: 0;
-      color: #667eea;
+
+    .stat-card.critical { border-left-color: var(--critical-color); }
+    .stat-card.high { border-left-color: var(--danger-color); }
+    .stat-card.medium { border-left-color: var(--warning-color); }
+    .stat-card.low { border-left-color: var(--success-color); }
+
+    .stat-card h3 {
+      color: var(--text-secondary);
+      font-size: 0.9em;
+      margin-bottom: 10px;
+      text-transform: uppercase;
     }
-    .feature ul {
-      margin: 10px 0;
-      padding-left: 20px;
+
+    .stat-card .value {
+      font-size: 2.5em;
+      font-weight: bold;
     }
-    .feature li {
-      margin: 8px 0;
+
+    .section {
+      background: var(--bg-secondary);
+      padding: 30px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
+
+    .section h2 {
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    thead {
+      background: var(--bg-tertiary);
+    }
+
+    th {
+      padding: 15px;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    td {
+      padding: 15px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    tbody tr {
+      transition: background-color 0.2s;
+    }
+
+    tbody tr:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .severity-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.85em;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .severity-critical {
+      background: var(--critical-color);
+      color: white;
+    }
+
+    .severity-high {
+      background: var(--danger-color);
+      color: white;
+    }
+
+    .severity-medium {
+      background: var(--warning-color);
+      color: white;
+    }
+
+    .severity-low {
+      background: var(--success-color);
+      color: white;
+    }
+
     .note {
-      background: #fff3cd;
-      border: 1px solid #ffc107;
+      background: var(--bg-tertiary);
+      border-left: 4px solid var(--accent-color);
       padding: 15px;
       border-radius: 8px;
       margin: 20px 0;
     }
-    .screenshot {
-      background: #e9ecef;
-      padding: 60px 20px;
+
+    .footer {
       text-align: center;
-      border-radius: 8px;
-      margin: 20px 0;
-      color: #6c757d;
-      font-style: italic;
+      color: var(--text-secondary);
+      margin-top: 40px;
+      padding: 20px;
     }
-    .cta {
-      background: #667eea;
-      color: white;
-      padding: 15px 30px;
-      border-radius: 8px;
-      text-align: center;
-      margin: 30px 0;
-      font-size: 1.1em;
+
+    code {
+      background: var(--bg-tertiary);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+    }
+
+    @media (max-width: 768px) {
+      .header {
+        flex-direction: column;
+        text-align: center;
+        gap: 20px;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      table {
+        font-size: 0.9em;
+      }
+
+      th, td {
+        padding: 10px;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>🦅 SonarHawk Demo Report</h1>
-    <p class="subtitle">Enhanced SonarQube Vulnerability Reports</p>
-
-    <div class="note">
-      <strong>📝 Note:</strong> This is a demonstration page. A real SonarHawk report contains actual vulnerability data from your SonarQube instance.
+  <div class="header">
+    <div class="header-content">
+      <h1>🦅 SonarHawk Demo Report</h1>
+      <p class="subtitle">Demo Project v1.0.0 - Sample Security Analysis</p>
     </div>
-
-    <div class="feature">
-      <h3>📊 What's Included in a Real Report</h3>
-      <ul>
-        <li><strong>Executive Summary</strong> - High-level overview of security findings</li>
-        <li><strong>Vulnerability Details</strong> - Complete list with severity, type, and location</li>
-        <li><strong>Security Hotspots</strong> - Areas requiring security review</li>
-        <li><strong>Code Coverage</strong> - Test coverage metrics (optional)</li>
-        <li><strong>Quality Gate Status</strong> - Pass/fail indicators (optional)</li>
-        <li><strong>Rule Descriptions</strong> - Detailed explanation of each security rule</li>
-      </ul>
-    </div>
-
-    <div class="feature">
-      <h3>✨ Key Features</h3>
-      <ul>
-        <li>🎨 Dark/Light theme support</li>
-        <li>📱 Fully responsive design</li>
-        <li>🔗 Clickable links to SonarQube issues</li>
-        <li>📄 Self-contained HTML file</li>
-        <li>🎯 Filterable and sortable tables</li>
-        <li>📈 Visual charts and metrics</li>
-        <li>💾 Export to PDF capability</li>
-      </ul>
-    </div>
-
-    <div class="screenshot">
-      [Sample vulnerability table would appear here with columns for Severity, Type, Message, File, and Line]
-    </div>
-
-    <div class="feature">
-      <h3>🚀 How to Generate Your Own Report</h3>
-      <ul>
-        <li>Enter your SonarQube server URL</li>
-        <li>Provide your project key</li>
-        <li>Add authentication credentials (token recommended)</li>
-        <li>Click "Generate Report"</li>
-        <li>Download your comprehensive security report!</li>
-      </ul>
-    </div>
-
-    <div class="cta">
-      Connect your SonarQube instance to generate a real report with your project's security findings!
-    </div>
-
-    <p style="text-align: center; color: #999; margin-top: 40px;">
-      🤖 Generated with SonarHawk<br>
-      <small>Your enhanced SonarQube reporting tool</small>
-    </p>
+    <button class="theme-toggle" onclick="toggleTheme()">
+      <span id="theme-icon">☀️</span> Toggle Theme
+    </button>
   </div>
+
+  <div class="container">
+    <div class="note">
+      <strong>📝 Demo Report:</strong> This is a sample report showing SonarHawk's capabilities. Real reports contain actual vulnerability data from your SonarQube instance.
+    </div>
+
+    <div class="stats">
+      <div class="stat-card critical">
+        <h3>Critical</h3>
+        <div class="value">2</div>
+      </div>
+      <div class="stat-card high">
+        <h3>High</h3>
+        <div class="value">5</div>
+      </div>
+      <div class="stat-card medium">
+        <h3>Medium</h3>
+        <div class="value">12</div>
+      </div>
+      <div class="stat-card low">
+        <h3>Low</h3>
+        <div class="value">8</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>📊 Vulnerability Details</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Severity</th>
+            <th>Type</th>
+            <th>Message</th>
+            <th>File</th>
+            <th>Line</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="severity-badge severity-critical">Critical</span></td>
+            <td>SQL Injection</td>
+            <td>User input is used in SQL query without sanitization</td>
+            <td><code>src/database/queries.js</code></td>
+            <td>145</td>
+          </tr>
+          <tr>
+            <td><span class="severity-badge severity-critical">Critical</span></td>
+            <td>Authentication</td>
+            <td>Hardcoded credentials found in source code</td>
+            <td><code>config/database.js</code></td>
+            <td>23</td>
+          </tr>
+          <tr>
+            <td><span class="severity-badge severity-high">High</span></td>
+            <td>XSS</td>
+            <td>Potential Cross-Site Scripting vulnerability</td>
+            <td><code>components/UserProfile.jsx</code></td>
+            <td>67</td>
+          </tr>
+          <tr>
+            <td><span class="severity-badge severity-high">High</span></td>
+            <td>Path Traversal</td>
+            <td>File path constructed from user input without validation</td>
+            <td><code>utils/fileHandler.js</code></td>
+            <td>89</td>
+          </tr>
+          <tr>
+            <td><span class="severity-badge severity-high">High</span></td>
+            <td>Insecure Crypto</td>
+            <td>Weak cryptographic algorithm (MD5) used for hashing</td>
+            <td><code>auth/passwordUtils.js</code></td>
+            <td>34</td>
+          </tr>
+          <tr>
+            <td><span class="severity-badge severity-medium">Medium</span></td>
+            <td>CSRF</td>
+            <td>Missing CSRF token validation on state-changing operation</td>
+            <td><code>routes/api/users.js</code></td>
+            <td>156</td>
+          </tr>
+          <tr>
+            <td><span class="severity-badge severity-medium">Medium</span></td>
+            <td>Information Disclosure</td>
+            <td>Sensitive information exposed in error messages</td>
+            <td><code>middleware/errorHandler.js</code></td>
+            <td>42</td>
+          </tr>
+          <tr>
+            <td><span class="severity-badge severity-medium">Medium</span></td>
+            <td>Regex DoS</td>
+            <td>Regular expression vulnerable to catastrophic backtracking</td>
+            <td><code>validators/emailValidator.js</code></td>
+            <td>18</td>
+          </tr>
+          <tr>
+            <td><span class="severity-badge severity-low">Low</span></td>
+            <td>Code Smell</td>
+            <td>Function has too many parameters (12 > 7 max)</td>
+            <td><code>services/reportGenerator.js</code></td>
+            <td>203</td>
+          </tr>
+          <tr>
+            <td><span class="severity-badge severity-low">Low</span></td>
+            <td>Maintainability</td>
+            <td>Cognitive complexity of function is too high (27 > 15 max)</td>
+            <td><code>controllers/authController.js</code></td>
+            <td>78</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2>✨ Report Features</h2>
+      <ul style="list-style: none; padding-left: 0;">
+        <li style="margin: 12px 0;">✅ <strong>Dark/Light Theme:</strong> Toggle between themes (try the button above!)</li>
+        <li style="margin: 12px 0;">✅ <strong>Detailed Analysis:</strong> Complete vulnerability information with file locations</li>
+        <li style="margin: 12px 0;">✅ <strong>Severity Badges:</strong> Color-coded severity levels for quick identification</li>
+        <li style="margin: 12px 0;">✅ <strong>Responsive Design:</strong> Works perfectly on desktop, tablet, and mobile</li>
+        <li style="margin: 12px 0;">✅ <strong>Self-Contained:</strong> Single HTML file with all styling included</li>
+        <li style="margin: 12px 0;">✅ <strong>Export Ready:</strong> Print to PDF or save for documentation</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>🚀 Generate Your Own Report</h2>
+      <p style="margin-bottom: 15px;">To create a real report with your project's data:</p>
+      <ol style="padding-left: 20px;">
+        <li style="margin: 10px 0;">Enter your SonarQube server URL (e.g., <code>sonarqube.company.com</code>)</li>
+        <li style="margin: 10px 0;">Provide your project key from SonarQube</li>
+        <li style="margin: 10px 0;">Add authentication (token recommended, or username/password)</li>
+        <li style="margin: 10px 0;">Click "Generate Report" and download your comprehensive security analysis!</li>
+      </ol>
+    </div>
+
+    <div class="footer">
+      🤖 Generated with <strong>SonarHawk</strong><br>
+      <small>Enhanced SonarQube Vulnerability Reporting</small>
+    </div>
+  </div>
+
+  <script>
+    function toggleTheme() {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      const icon = document.getElementById('theme-icon');
+
+      html.setAttribute('data-theme', newTheme);
+      icon.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+
+      // Save preference
+      localStorage.setItem('theme', newTheme);
+    }
+
+    // Load saved theme
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    document.getElementById('theme-icon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+  </script>
 </body>
 </html>`;
 
