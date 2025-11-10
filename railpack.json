@@ -1,0 +1,47 @@
+{
+  "$schema": "https://schema.railpack.com",
+  "provider": "node",
+  "packages": {
+    "node": "20"
+  },
+  "caches": {
+    "npm-cache": {
+      "directory": "/root/.npm",
+      "type": "shared"
+    },
+    "node-modules": {
+      "directory": "/app/node_modules",
+      "type": "shared"
+    }
+  },
+  "steps": {
+    "install": {
+      "commands": [
+        "npm install --include=dev"
+      ],
+      "caches": ["npm-cache", "node-modules"]
+    },
+    "install-web": {
+      "inputs": [{ "step": "install" }],
+      "commands": [
+        "npm install --workspace=web --include=dev"
+      ],
+      "caches": ["npm-cache", "node-modules"]
+    },
+    "build": {
+      "inputs": [{ "step": "install-web" }],
+      "commands": [
+        "npm run build"
+      ]
+    }
+  },
+  "deploy": {
+    "base": {
+      "image": "ghcr.io/railwayapp/railpack-runtime:latest"
+    },
+    "startCommand": "cd web && NODE_ENV=production node server.js",
+    "inputs": [
+      { "step": "build", "include": ["."] }
+    ]
+  }
+}
