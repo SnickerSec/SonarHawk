@@ -34,7 +34,8 @@ import {
   ModalBody,
   ModalFooter,
   ModalCloseButton,
-  useDisclosure
+  useDisclosure,
+  Link
 } from '@chakra-ui/react'
 import { useForm } from 'react-hook-form'
 import { useState, useEffect } from 'react'
@@ -55,6 +56,26 @@ export function ReportForm() {
   const [reportBlob, setReportBlob] = useState(null)
   const [reportData, setReportData] = useState(null)
   const { isOpen, onOpen, onClose } = useDisclosure()
+
+  // Watch SonarQube URL for dynamic token link
+  const sonarUrl = watch('sonarurl')
+
+  // Generate token URL based on user's SonarQube instance
+  const getTokenUrl = () => {
+    if (!sonarUrl) return null
+    try {
+      const baseUrl = sonarUrl.replace(/\/+$/, '') // Remove trailing slashes
+      // SonarCloud uses different URL structure
+      if (baseUrl.includes('sonarcloud.io')) {
+        return 'https://sonarcloud.io/account/security'
+      }
+      return `${baseUrl}/account/security`
+    } catch {
+      return null
+    }
+  }
+
+  const tokenUrl = getTokenUrl()
 
   // Keyboard shortcuts: Ctrl+Enter (or Cmd+Enter on Mac) to submit
   useEffect(() => {
@@ -315,7 +336,21 @@ export function ReportForm() {
             {/* Authentication - Token */}
             <FormControl>
               <Tooltip
-                label="Generate a token in SonarQube: User > My Account > Security > Generate Tokens"
+                label={
+                  tokenUrl ? (
+                    <VStack spacing={1} align="start">
+                      <Text>Generate a token in your SonarQube instance:</Text>
+                      <Text fontWeight="bold" color="blue.200">
+                        User → My Account → Security → Generate Tokens
+                      </Text>
+                      <Text fontSize="xs" mt={1}>
+                        Or click below to open token page
+                      </Text>
+                    </VStack>
+                  ) : (
+                    "Generate a token in SonarQube: User → My Account → Security → Generate Tokens"
+                  )
+                }
                 placement="top-start"
                 hasArrow
               >
@@ -326,9 +361,17 @@ export function ReportForm() {
                 {...register('sonartoken')}
                 placeholder="squ_..."
               />
-              <Text fontSize="sm" color="gray.500" mt={1}>
-                SonarQube authentication token
-              </Text>
+              {tokenUrl ? (
+                <Text fontSize="sm" mt={1}>
+                  <Link href={tokenUrl} color="blue.500" isExternal textDecoration="underline">
+                    Click here to generate a token in your SonarQube instance →
+                  </Link>
+                </Text>
+              ) : (
+                <Text fontSize="sm" color="gray.500" mt={1}>
+                  SonarQube authentication token
+                </Text>
+              )}
             </FormControl>
 
             {/* Alternative Authentication */}
