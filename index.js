@@ -1,5 +1,5 @@
-import { writeFile, readFile } from "fs/promises";
-import { resolve, dirname } from "path";
+import { writeFile, readFile, mkdir } from "fs/promises";
+import { resolve, dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { Command } from "commander";
 import ejs from "ejs";
@@ -11,6 +11,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { getProxyForUrl } from 'proxy-from-env';
 import Bottleneck from 'bottleneck';
 import QuickLRU from 'quick-lru';
+import { homedir } from 'os';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -591,6 +592,136 @@ const processHotspot = (hotspot, severity, createLink) => ({
   tags: hotspot.tags || []
 });
 
+// Trend data management
+const TREND_DATA_DIR = join(homedir(), '.sonarhawk', 'trends');
+
+async function ensureTrendDataDir() {
+  try {
+    await mkdir(TREND_DATA_DIR, { recursive: true });
+  } catch (error) {
+    // Directory might already exist, ignore
+  }
+}
+
+async function saveTrendData(projectComponent, reportData) {
+  await ensureTrendDataDir();
+
+  const sanitizedComponent = projectComponent.replace(/[^a-z0-9]/gi, '_');
+  const trendFile = join(TREND_DATA_DIR, `${sanitizedComponent}.json`);
+
+  let history = [];
+
+  // Load existing history
+  try {
+    if (existsSync(trendFile)) {
+      const content = await readFile(trendFile, 'utf-8');
+      history = JSON.parse(content);
+    }
+  } catch (error) {
+    console.error('Failed to load trend history:', error.message);
+  }
+
+  // Create trend snapshot
+  const snapshot = {
+    timestamp: Date.now(),
+    date: new Date().toISOString(),
+    summary: reportData.summary,
+    coverage: reportData.coverage || 0,
+    qualityGateStatus: reportData.qualityGateStatus?.projectStatus?.status || 'N/A',
+    totalIssues: reportData.issues.length,
+    branch: reportData.branch || 'main',
+    compliance: reportData.compliance ? {
+      owaspCount: reportData.compliance.owasp?.length || 0,
+      cweCount: reportData.compliance.cwe?.length || 0,
+      sansCount: reportData.compliance.sans?.length || 0
+    } : null
+  };
+
+  // Add to history (keep last 100 snapshots)
+  history.push(snapshot);
+  if (history.length > 100) {
+    history = history.slice(-100);
+  }
+
+  // Save updated history
+  await writeFile(trendFile, JSON.stringify(history, null, 2));
+  console.error(`Trend data saved to ${trendFile}`);
+
+  return history;
+}
+
+async function loadTrendData(projectComponent, periodDays = 90) {
+  await ensureTrendDataDir();
+
+  const sanitizedComponent = projectComponent.replace(/[^a-z0-9]/gi, '_');
+  const trendFile = join(TREND_DATA_DIR, `${sanitizedComponent}.json`);
+
+  if (!existsSync(trendFile)) {
+    return [];
+  }
+
+  try {
+    const content = await readFile(trendFile, 'utf-8');
+    let history = JSON.parse(content);
+
+    // Filter by period if specified
+    if (periodDays) {
+      const cutoffDate = Date.now() - (periodDays * 24 * 60 * 60 * 1000);
+      history = history.filter(snapshot => snapshot.timestamp >= cutoffDate);
+    }
+
+    return history;
+  } catch (error) {
+    console.error('Failed to load trend data:', error.message);
+    return [];
+  }
+}
+
+function calculateTrends(history) {
+  if (history.length < 2) {
+    return {
+      hasTrendData: false,
+      message: 'Need at least 2 historical snapshots for trend analysis'
+    };
+  }
+
+  const latest = history[history.length - 1];
+  const oldest = history[0];
+  const previous = history.length > 1 ? history[history.length - 2] : oldest;
+
+  // Calculate deltas
+  const calculateDelta = (current, previous) => {
+    if (!previous) return { value: 0, percent: 0, direction: 'stable' };
+    const delta = current - previous;
+    const percent = previous !== 0 ? ((delta / previous) * 100).toFixed(1) : 0;
+    const direction = delta > 0 ? 'up' : delta < 0 ? 'down' : 'stable';
+    return { value: delta, percent, direction };
+  };
+
+  return {
+    hasTrendData: true,
+    dataPoints: history.length,
+    periodDays: Math.ceil((latest.timestamp - oldest.timestamp) / (1000 * 60 * 60 * 24)),
+    latest: latest,
+    oldest: oldest,
+    deltas: {
+      high: calculateDelta(latest.summary.high, previous.summary.high),
+      medium: calculateDelta(latest.summary.medium, previous.summary.medium),
+      low: calculateDelta(latest.summary.low, previous.summary.low),
+      total: calculateDelta(latest.totalIssues, previous.totalIssues),
+      coverage: calculateDelta(latest.coverage, previous.coverage)
+    },
+    overallTrend: {
+      high: calculateDelta(latest.summary.high, oldest.summary.high),
+      medium: calculateDelta(latest.summary.medium, oldest.summary.medium),
+      low: calculateDelta(latest.summary.low, oldest.summary.low),
+      total: calculateDelta(latest.totalIssues, oldest.totalIssues),
+      coverage: calculateDelta(latest.coverage, oldest.coverage)
+    },
+    history: history
+  };
+}
+
 // Process compliance data from issues
 const processComplianceData = (issues) => {
   const compliance = {
@@ -949,12 +1080,27 @@ const generateReport = async (options) => {
       }
     };
 
+    // Save trend data if requested
+    if (options.saveTrendData) {
+      await saveTrendData(options.sonarcomponent, data);
+    }
+
+    // Load and add trend data if available
+    if (options.includeTrends) {
+      const trendHistory = await loadTrendData(
+        options.sonarcomponent,
+        options.trendPeriod || 90
+      );
+      const trendAnalysis = calculateTrends(trendHistory);
+      data.trendAnalysis = trendAnalysis;
+    }
+
     // Generate reports
     await generateOutput(data, options);
 
     // Print summary to console
     console.error(await ejs.renderFile(
-      resolve(__dirname, "summary.txt.ejs"), 
+      resolve(__dirname, "summary.txt.ejs"),
       data,
       {}
     ));
@@ -1212,6 +1358,19 @@ const buildCommand = () => {
       "--portfolio-name <name>",
       "Name for the portfolio report"
     )
+    .option(
+      "--save-trend-data",
+      "Save current report data for trend analysis (stored in ~/.sonarhawk/trends)"
+    )
+    .option(
+      "--include-trends",
+      "Include trend analysis in report (requires historical data from --save-trend-data)"
+    )
+    .option(
+      "--trend-period <days>",
+      "Number of days to include in trend analysis (default: 90)",
+      "90"
+    )
         .addHelpText(
           "after",
           `
@@ -1237,8 +1396,23 @@ const buildCommand = () => {
           ]
         }
 
+      Trend Analysis (track improvements over time):
+        # First run: Save baseline data
+        sonarhawk --project=MyProject --sonarurl=https://sonarqube.company.com --sonarcomponent=myapp:main --sonartoken=xxx --save-trend-data --output=report.html
+
+        # Subsequent runs: Save data AND show trends
+        sonarhawk --project=MyProject --sonarurl=https://sonarqube.company.com --sonarcomponent=myapp:main --sonartoken=xxx --save-trend-data --include-trends --output=report.html
+
+        # Show trends for last 30 days
+        sonarhawk --project=MyProject --sonarurl=https://sonarqube.company.com --sonarcomponent=myapp:main --sonartoken=xxx --include-trends --trend-period=30 --output=report.html
+
       Export to PDF:
         Open the generated HTML report in a browser and click "Export to PDF" button (or press Ctrl/Cmd+P)
+
+      Notes:
+        - Trend data is stored in ~/.sonarhawk/trends/
+        - Run with --save-trend-data regularly (e.g., in CI/CD) to build historical data
+        - At least 2 snapshots are needed for trend analysis
     `
         );
     

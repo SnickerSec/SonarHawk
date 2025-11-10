@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SonarQube <%= vulnerabilityPhrase %> Report</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js" integrity="sha512-w3u3BtX5h2Qscdw3DcQmqvDjFLnKdNqzPgvhFhOYuW0LnxzbSNlbP6jkWpkzhyE6hQAGPKtJx2e4hMvVrH8L4w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
     <style>
       /* Light Theme (Default) Variables */
@@ -314,6 +315,74 @@
       td a {
         font-weight: 500;
       }
+
+      /* Trend Analysis Styles */
+      .trend-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin: 20px 0;
+      }
+
+      .trend-card {
+        background-color: var(--section-bg);
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        text-align: center;
+      }
+
+      .trend-label {
+        font-size: 12px;
+        text-transform: uppercase;
+        opacity: 0.7;
+        margin-bottom: 10px;
+      }
+
+      .trend-value {
+        font-size: 28px;
+        font-weight: bold;
+        margin-bottom: 8px;
+      }
+
+      .trend-delta {
+        font-size: 14px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+      }
+
+      .trend-delta.up {
+        color: #d9534f;
+      }
+
+      .trend-delta.down {
+        color: #4caf50;
+      }
+
+      .trend-delta.stable {
+        color: #999;
+      }
+
+      .trend-arrow {
+        font-size: 16px;
+      }
+
+      .chart-container {
+        position: relative;
+        height: 300px;
+        margin: 20px 0;
+      }
+
+      .trend-period {
+        background-color: var(--section-bg);
+        padding: 10px 15px;
+        border-radius: 5px;
+        border-left: 4px solid var(--header-border);
+        margin-bottom: 20px;
+      }
     </style>
   </head>
 
@@ -367,6 +436,92 @@
             since <%= qualityGateStatusPeriodDate %>
           <% } %>
         </p>
+      </div>
+      <% } %>
+
+      <!-- Trend Analysis Section -->
+      <% if (trendAnalysis && trendAnalysis.hasTrendData) { %>
+      <div class="section">
+        <h2>📈 Trend Analysis</h2>
+        <div class="trend-period">
+          <strong>Analysis Period:</strong> <%= trendAnalysis.periodDays %> days
+          | <strong>Data Points:</strong> <%= trendAnalysis.dataPoints %> snapshots
+        </div>
+
+        <!-- Delta Cards -->
+        <h3 style="color: var(--text-color); margin-top: 20px;">Recent Changes (vs Previous Report)</h3>
+        <div class="trend-grid">
+          <div class="trend-card">
+            <div class="trend-label">High Severity</div>
+            <div class="trend-value"><%= trendAnalysis.latest.summary.high %></div>
+            <div class="trend-delta <%= trendAnalysis.deltas.high.direction %>">
+              <span class="trend-arrow">
+                <%= trendAnalysis.deltas.high.direction === 'up' ? '↑' :
+                    trendAnalysis.deltas.high.direction === 'down' ? '↓' : '→' %>
+              </span>
+              <%= trendAnalysis.deltas.high.value > 0 ? '+' : '' %><%= trendAnalysis.deltas.high.value %>
+              (<%= trendAnalysis.deltas.high.percent %>%)
+            </div>
+          </div>
+
+          <div class="trend-card">
+            <div class="trend-label">Medium Severity</div>
+            <div class="trend-value"><%= trendAnalysis.latest.summary.medium %></div>
+            <div class="trend-delta <%= trendAnalysis.deltas.medium.direction %>">
+              <span class="trend-arrow">
+                <%= trendAnalysis.deltas.medium.direction === 'up' ? '↑' :
+                    trendAnalysis.deltas.medium.direction === 'down' ? '↓' : '→' %>
+              </span>
+              <%= trendAnalysis.deltas.medium.value > 0 ? '+' : '' %><%= trendAnalysis.deltas.medium.value %>
+              (<%= trendAnalysis.deltas.medium.percent %>%)
+            </div>
+          </div>
+
+          <div class="trend-card">
+            <div class="trend-label">Low Severity</div>
+            <div class="trend-value"><%= trendAnalysis.latest.summary.low %></div>
+            <div class="trend-delta <%= trendAnalysis.deltas.low.direction %>">
+              <span class="trend-arrow">
+                <%= trendAnalysis.deltas.low.direction === 'up' ? '↑' :
+                    trendAnalysis.deltas.low.direction === 'down' ? '↓' : '→' %>
+              </span>
+              <%= trendAnalysis.deltas.low.value > 0 ? '+' : '' %><%= trendAnalysis.deltas.low.value %>
+              (<%= trendAnalysis.deltas.low.percent %>%)
+            </div>
+          </div>
+
+          <div class="trend-card">
+            <div class="trend-label">Total Issues</div>
+            <div class="trend-value"><%= trendAnalysis.latest.totalIssues %></div>
+            <div class="trend-delta <%= trendAnalysis.deltas.total.direction %>">
+              <span class="trend-arrow">
+                <%= trendAnalysis.deltas.total.direction === 'up' ? '↑' :
+                    trendAnalysis.deltas.total.direction === 'down' ? '↓' : '→' %>
+              </span>
+              <%= trendAnalysis.deltas.total.value > 0 ? '+' : '' %><%= trendAnalysis.deltas.total.value %>
+              (<%= trendAnalysis.deltas.total.percent %>%)
+            </div>
+          </div>
+
+          <div class="trend-card">
+            <div class="trend-label">Code Coverage</div>
+            <div class="trend-value"><%= trendAnalysis.latest.coverage %>%</div>
+            <div class="trend-delta <%= trendAnalysis.deltas.coverage.direction === 'up' ? 'down' : trendAnalysis.deltas.coverage.direction === 'down' ? 'up' : 'stable' %>">
+              <span class="trend-arrow">
+                <%= trendAnalysis.deltas.coverage.direction === 'up' ? '↑' :
+                    trendAnalysis.deltas.coverage.direction === 'down' ? '↓' : '→' %>
+              </span>
+              <%= trendAnalysis.deltas.coverage.value > 0 ? '+' : '' %><%= trendAnalysis.deltas.coverage.value %>
+              (<%= trendAnalysis.deltas.coverage.percent %>%)
+            </div>
+          </div>
+        </div>
+
+        <!-- Trend Chart -->
+        <h3 style="color: var(--text-color); margin-top: 30px;">Historical Trend</h3>
+        <div class="chart-container">
+          <canvas id="trendChart"></canvas>
+        </div>
       </div>
       <% } %>
 
@@ -593,6 +748,152 @@
           exportToPDF();
         }
       });
+
+      // Trend Chart Initialization
+      <% if (trendAnalysis && trendAnalysis.hasTrendData) { %>
+      (function() {
+        const trendCanvas = document.getElementById('trendChart');
+        if (!trendCanvas) return;
+
+        const isDark = document.documentElement.classList.contains('dark');
+        const history = <%- JSON.stringify(trendAnalysis.history) %>;
+
+        // Prepare data
+        const labels = history.map(h => new Date(h.timestamp).toLocaleDateString());
+        const highData = history.map(h => h.summary.high);
+        const mediumData = history.map(h => h.summary.medium);
+        const lowData = history.map(h => h.summary.low);
+        const coverageData = history.map(h => h.coverage);
+
+        new Chart(trendCanvas, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: 'High Severity',
+                data: highData,
+                borderColor: 'rgb(217, 83, 79)',
+                backgroundColor: 'rgba(217, 83, 79, 0.1)',
+                tension: 0.3,
+                yAxisID: 'y'
+              },
+              {
+                label: 'Medium Severity',
+                data: mediumData,
+                borderColor: 'rgb(240, 173, 78)',
+                backgroundColor: 'rgba(240, 173, 78, 0.1)',
+                tension: 0.3,
+                yAxisID: 'y'
+              },
+              {
+                label: 'Low Severity',
+                data: lowData,
+                borderColor: 'rgb(91, 192, 222)',
+                backgroundColor: 'rgba(91, 192, 222, 0.1)',
+                tension: 0.3,
+                yAxisID: 'y'
+              },
+              {
+                label: 'Coverage %',
+                data: coverageData,
+                borderColor: 'rgb(76, 192, 80)',
+                backgroundColor: 'rgba(76, 192, 80, 0.1)',
+                tension: 0.3,
+                yAxisID: 'y1',
+                borderDash: [5, 5]
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+              mode: 'index',
+              intersect: false
+            },
+            plugins: {
+              legend: {
+                labels: {
+                  color: isDark ? '#e0e0e0' : '#333'
+                }
+              },
+              title: {
+                display: true,
+                text: 'Vulnerability Trends Over Time',
+                color: isDark ? '#e0e0e0' : '#333',
+                font: {
+                  size: 16
+                }
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    let label = context.dataset.label || '';
+                    if (label) {
+                      label += ': ';
+                    }
+                    if (context.parsed.y !== null) {
+                      if (context.dataset.yAxisID === 'y1') {
+                        label += context.parsed.y + '%';
+                      } else {
+                        label += context.parsed.y;
+                      }
+                    }
+                    return label;
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                ticks: {
+                  color: isDark ? '#e0e0e0' : '#333'
+                },
+                grid: {
+                  color: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+                }
+              },
+              y: {
+                type: 'linear',
+                display: true,
+                position: 'left',
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: 'Number of Issues',
+                  color: isDark ? '#e0e0e0' : '#333'
+                },
+                ticks: {
+                  color: isDark ? '#e0e0e0' : '#333'
+                },
+                grid: {
+                  color: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+                }
+              },
+              y1: {
+                type: 'linear',
+                display: true,
+                position: 'right',
+                beginAtZero: true,
+                max: 100,
+                title: {
+                  display: true,
+                  text: 'Coverage %',
+                  color: isDark ? '#e0e0e0' : '#333'
+                },
+                ticks: {
+                  color: isDark ? '#e0e0e0' : '#333'
+                },
+                grid: {
+                  drawOnChartArea: false
+                }
+              }
+            }
+          }
+        });
+      })();
+      <% } %>
     </script>
   </body>
 </html>

@@ -47,7 +47,9 @@ export function ReportForm() {
   const { register, handleSubmit, watch, formState: { errors } } = useForm({
     defaultValues: {
       darkTheme: true,
-      includeCompliance: true
+      includeCompliance: true,
+      saveTrendData: true,
+      includeTrends: false
     }
   })
   const toast = useToast()
@@ -819,6 +821,32 @@ export function ReportForm() {
                     </FormLabel>
                   </Tooltip>
                   <Switch {...register('includeCompliance')} defaultChecked />
+                </FormControl>
+
+                <FormControl display="flex" alignItems="center">
+                  <Tooltip
+                    label="Track vulnerability trends over time and show improvement deltas (requires multiple report runs)"
+                    placement="top-start"
+                    hasArrow
+                  >
+                    <FormLabel mb="0" flex="1" cursor="help">
+                      Trend Analysis
+                    </FormLabel>
+                  </Tooltip>
+                  <Switch {...register('saveTrendData')} defaultChecked />
+                </FormControl>
+
+                <FormControl display="flex" alignItems="center">
+                  <Tooltip
+                    label="Show historical trends and charts in the report (requires saved trend data)"
+                    placement="top-start"
+                    hasArrow
+                  >
+                    <FormLabel mb="0" flex="1" cursor="help">
+                      Include Trend Charts
+                    </FormLabel>
+                  </Tooltip>
+                  <Switch {...register('includeTrends')} />
                 </FormControl>
               </VStack>
             </AccordionPanel>
