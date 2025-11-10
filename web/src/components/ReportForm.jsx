@@ -51,8 +51,6 @@ export function ReportForm() {
   })
   const toast = useToast()
   const [isGenerating, setIsGenerating] = useState(false)
-  const [isTesting, setIsTesting] = useState(false)
-  const [connectionStatus, setConnectionStatus] = useState(null)
   const [reachabilityStatus, setReachabilityStatus] = useState(null)
   const [authStatus, setAuthStatus] = useState(null)
   const [projectStatus, setProjectStatus] = useState(null)
@@ -240,12 +238,6 @@ export function ReportForm() {
           valid: true,
           version: result.server?.version
         })
-        // Also update connection status
-        setConnectionStatus({
-          success: true,
-          message: result.message,
-          server: result.server
-        })
       } else if (result.error && result.error.includes('not found')) {
         setProjectStatus({
           valid: false,
@@ -277,7 +269,7 @@ export function ReportForm() {
 
     // Debounce the reachability check
     const timeoutId = setTimeout(() => {
-      if (sonarUrl && !isCheckingReachability && !isTesting && !isGenerating) {
+      if (sonarUrl && !isCheckingReachability && !isGenerating) {
         checkReachability(sonarUrl)
       }
     }, 1000) // Wait 1 second after user stops typing
@@ -297,7 +289,7 @@ export function ReportForm() {
     if (!reachabilityStatus?.reachable) return
 
     const timeoutId = setTimeout(() => {
-      if (!isCheckingAuth && !isTesting && !isGenerating) {
+      if (!isCheckingAuth && !isGenerating) {
         validateAuth()
       }
     }, 1000)
@@ -317,7 +309,7 @@ export function ReportForm() {
     if (!reachabilityStatus?.reachable) return
 
     const timeoutId = setTimeout(() => {
-      if (!isCheckingProject && !isTesting && !isGenerating) {
+      if (!isCheckingProject && !isGenerating) {
         validateProject()
       }
     }, 1000)
@@ -331,7 +323,7 @@ export function ReportForm() {
     const handleKeyDown = (event) => {
       if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
         event.preventDefault()
-        if (!isGenerating && !isTesting) {
+        if (!isGenerating) {
           handleSubmit(onSubmit)()
         }
       }
@@ -339,89 +331,7 @@ export function ReportForm() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isGenerating, isTesting, handleSubmit])
-
-  // Test connection function
-  const testConnection = async () => {
-    const formData = watch()
-
-    // Validate required fields
-    if (!formData.sonarurl) {
-      toast({
-        title: 'Missing URL',
-        description: 'Please enter a SonarQube URL',
-        status: 'warning',
-        duration: 3000
-      })
-      return
-    }
-
-    if (!formData.sonarcomponent) {
-      toast({
-        title: 'Missing Project Key',
-        description: 'Please enter a project key/component',
-        status: 'warning',
-        duration: 3000
-      })
-      return
-    }
-
-    setIsTesting(true)
-    setConnectionStatus(null)
-
-    try {
-      const apiUrl = import.meta.env.PROD
-        ? '/api/test-connection'
-        : 'http://localhost:3000/api/test-connection'
-
-      // Use full URL with https:// prefix
-      const urlToTest = getFullUrl(formData.sonarurl)
-
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sonarurl: urlToTest,
-          sonarcomponent: formData.sonarcomponent,
-          sonartoken: formData.sonartoken,
-          sonarusername: formData.sonarusername,
-          sonarpassword: formData.sonarpassword
-        })
-      })
-
-      const result = await response.json()
-
-      if (result.success) {
-        setConnectionStatus({ success: true, message: result.message, server: result.server })
-        toast({
-          title: 'Connection Successful',
-          description: `Connected to SonarQube ${result.server.version}`,
-          status: 'success',
-          duration: 5000
-        })
-      } else {
-        setConnectionStatus({ success: false, message: result.error })
-        toast({
-          title: 'Connection Failed',
-          description: result.error,
-          status: 'error',
-          duration: 5000,
-          isClosable: true
-        })
-      }
-    } catch (error) {
-      setConnectionStatus({ success: false, message: error.message })
-      toast({
-        title: 'Connection Error',
-        description: 'Failed to test connection. Please check your settings.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true
-      })
-    } finally {
-      setIsTesting(false)
-    }
-  }
+  }, [isGenerating, handleSubmit])
 
   const onSubmit = async (data) => {
     setIsGenerating(true)
@@ -552,13 +462,7 @@ export function ReportForm() {
                     <Text fontSize="xs" color="gray.500">Checking reachability...</Text>
                   </HStack>
                 )}
-                {isTesting && !isCheckingReachability && (
-                  <HStack spacing={1}>
-                    <Spinner size="xs" />
-                    <Text fontSize="xs" color="gray.500">Testing connection...</Text>
-                  </HStack>
-                )}
-                {!isCheckingReachability && !isTesting && reachabilityStatus && (
+                {!isCheckingReachability && reachabilityStatus && (
                   <Tooltip
                     label={
                       reachabilityStatus.reachable
@@ -767,36 +671,6 @@ export function ReportForm() {
               </AccordionItem>
             </Accordion>
 
-            <Divider />
-
-            {/* Test Connection Button */}
-            <Button
-              onClick={testConnection}
-              isLoading={isTesting}
-              loadingText="Testing..."
-              variant="outline"
-              size="sm"
-              width="full"
-            >
-              {connectionStatus ? 'Retry Connection Test' : 'Test Connection'}
-            </Button>
-
-            {/* Connection Status */}
-            {connectionStatus && (
-              <Alert status={connectionStatus.success ? 'success' : 'error'} borderRadius="md">
-                <AlertIcon />
-                <Box flex="1">
-                  <AlertDescription>
-                    {connectionStatus.message}
-                    {connectionStatus.server && (
-                      <Text fontSize="xs" mt={1}>
-                        SonarQube {connectionStatus.server.version} - {connectionStatus.server.status}
-                      </Text>
-                    )}
-                  </AlertDescription>
-                </Box>
-              </Alert>
-            )}
           </VStack>
         </Box>
 
@@ -1087,7 +961,7 @@ export function ReportForm() {
             width="100%"
             isLoading={isGenerating}
             loadingText={generatingStep || 'Generating...'}
-            isDisabled={isGenerating || isTesting}
+            isDisabled={isGenerating}
           >
             Generate Report
           </Button>
