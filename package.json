@@ -22,6 +22,7 @@
   },
   "exports": "./index.js",
   "scripts": {
+    "build": "npm run build --workspace=web",
     "test": "mocha test/**/*.test.js",
     "test:watch": "mocha test/**/*.test.js --watch",
     "test:coverage": "nyc --reporter=html --reporter=text mocha test/**/*.test.js",

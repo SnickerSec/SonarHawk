@@ -8,7 +8,7 @@ cmds = [
 ]
 
 [phases.build]
-cmds = ["npm run build --workspace=web"]
+cmds = ["npm run build"]
 
 [start]
 cmd = "cd web && NODE_ENV=production node server.js"
