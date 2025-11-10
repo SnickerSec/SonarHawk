@@ -6,7 +6,6 @@ import {
   Input,
   Switch,
   VStack,
-  useToast,
   Accordion,
   AccordionItem,
   AccordionButton,
@@ -24,7 +23,8 @@ import {
   AlertDescription,
   FormErrorMessage,
   Spinner,
-  Badge
+  Badge,
+  useToast
 } from '@chakra-ui/react'
 import { useForm } from 'react-hook-form'
 import { useState } from 'react'
