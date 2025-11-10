@@ -228,10 +228,16 @@ app.get('/api/demo', async (req, res) => {
       border-bottom: 2px solid var(--border-color);
     }
 
+    .table-wrapper {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-top: 20px;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 20px;
+      min-width: 600px;
     }
 
     thead {
@@ -321,12 +327,28 @@ app.get('/api/demo', async (req, res) => {
         grid-template-columns: 1fr;
       }
 
+      .table-wrapper {
+        border-radius: 8px;
+        box-shadow: inset 0 0 0 1px var(--border-color);
+      }
+
       table {
-        font-size: 0.9em;
+        font-size: 0.85em;
       }
 
       th, td {
-        padding: 10px;
+        padding: 10px 8px;
+        white-space: nowrap;
+      }
+
+      td:nth-child(3) {
+        max-width: 200px;
+        white-space: normal;
+        word-wrap: break-word;
+      }
+
+      .section {
+        padding: 20px;
       }
     }
   </style>
@@ -368,17 +390,18 @@ app.get('/api/demo', async (req, res) => {
 
     <div class="section">
       <h2>📊 Vulnerability Details</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Severity</th>
-            <th>Type</th>
-            <th>Message</th>
-            <th>File</th>
-            <th>Line</th>
-          </tr>
-        </thead>
-        <tbody>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Severity</th>
+              <th>Type</th>
+              <th>Message</th>
+              <th>File</th>
+              <th>Line</th>
+            </tr>
+          </thead>
+          <tbody>
           <tr>
             <td><span class="severity-badge severity-critical">Critical</span></td>
             <td>SQL Injection</td>
@@ -451,6 +474,7 @@ app.get('/api/demo', async (req, res) => {
           </tr>
         </tbody>
       </table>
+      </div>
     </div>
 
     <div class="section">
