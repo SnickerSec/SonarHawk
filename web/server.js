@@ -12,6 +12,18 @@ const projectRoot = resolve(__dirname, '..');
 const indexModule = await import('../index.js');
 const { generateReport } = indexModule;
 
+// Import scheduling services (only in production or when DATABASE_URL is set)
+let initDatabase, initializeScheduler, schedulesRouter;
+if (process.env.DATABASE_URL) {
+  const dbModule = await import('./services/database.js');
+  const schedulerModule = await import('./services/schedulerService.js');
+  const routesModule = await import('./routes/schedules.js');
+
+  initDatabase = dbModule.initDatabase;
+  initializeScheduler = schedulerModule.initializeScheduler;
+  schedulesRouter = routesModule.default;
+}
+
 const app = express();
 const port = process.env.PORT || 3000;
 const isDev = process.env.NODE_ENV !== 'production';
@@ -735,6 +747,12 @@ app.post('/api/generate', generateLimiter, async (req, res) => {
   }
 });
 
+// Mount schedules routes (if database is configured)
+if (schedulesRouter) {
+  app.use('/api/schedules', schedulesRouter);
+  console.log('✓ Schedules API enabled at /api/schedules');
+}
+
 // Serve index.html for all other routes in production (SPA fallback)
 if (!isDev) {
   app.use((req, res) => {
@@ -742,13 +760,45 @@ if (!isDev) {
   });
 }
 
-app.listen(port, '0.0.0.0', () => {
-  console.log(`SonarHawk server running on port ${port}`);
-  console.log(`Environment: ${isDev ? 'development' : 'production'}`);
-  if (isDev) {
-    console.log('API available at http://localhost:3000/api');
-    console.log('Frontend should be running on http://localhost:5173');
-  } else {
-    console.log(`Access the application at http://0.0.0.0:${port}`);
+// Initialize database and scheduler
+async function startServer() {
+  try {
+    // Initialize database if configured
+    if (initDatabase) {
+      await initDatabase();
+      console.log('✓ Database initialized');
+    }
+
+    // Start scheduler if configured
+    if (initializeScheduler) {
+      await initializeScheduler();
+      console.log('✓ Scheduler initialized');
+    }
+
+    // Start Express server
+    app.listen(port, '0.0.0.0', () => {
+      console.log(`\n🦅 SonarHawk server running on port ${port}`);
+      console.log(`Environment: ${isDev ? 'development' : 'production'}`);
+
+      if (isDev) {
+        console.log('API available at http://localhost:3000/api');
+        console.log('Frontend should be running on http://localhost:5173');
+      } else {
+        console.log(`Access the application at http://0.0.0.0:${port}`);
+      }
+
+      if (process.env.DATABASE_URL) {
+        console.log('✓ Scheduling & Email features enabled');
+      } else {
+        console.log('⚠ DATABASE_URL not set - scheduling disabled');
+      }
+
+      console.log(''); // Empty line for readability
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
   }
-});
+}
+
+startServer();
