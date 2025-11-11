@@ -5,7 +5,7 @@
     "node": "20"
   },
   "build": {
-    "command": "npm install --include=dev --include=optional && npm run build"
+    "command": "npm install --include=optional && npm install --workspace=web --include=optional && npm run build"
   },
   "deploy": {
     "startCommand": "cd web && NODE_ENV=production node server.js"
