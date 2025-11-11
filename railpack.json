@@ -4,33 +4,22 @@
   "packages": {
     "node": "20"
   },
-  "caches": {
-    "npm-cache": {
-      "directory": "/root/.npm",
-      "type": "shared"
-    }
-  },
   "steps": {
     "install": {
       "commands": [
-        "npm install --include=dev --include=optional"
-      ],
-      "caches": ["npm-cache"]
+        "npm install --include=dev --include=optional --legacy-peer-deps"
+      ]
     },
     "build": {
-      "inputs": [{ "step": "install" }],
+      "inputs": [
+        { "step": "install" }
+      ],
       "commands": [
         "npm run build"
       ]
     }
   },
   "deploy": {
-    "base": {
-      "image": "ghcr.io/railwayapp/railpack-runtime:latest"
-    },
-    "startCommand": "cd web && NODE_ENV=production node server.js",
-    "inputs": [
-      { "step": "build", "include": ["."] }
-    ]
+    "startCommand": "cd web && NODE_ENV=production node server.js"
   }
 }
