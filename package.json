@@ -63,6 +63,6 @@
     "access": "public"
   },
   "engines": {
-    "node": ">=14 <=20"
+    "node": ">=14"
   }
 }
