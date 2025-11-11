@@ -6,6 +6,9 @@
   },
   "steps": {
     "install": {
+      "inputs": [
+        { "context": ".", "include": ["package.json", "package-lock.json", "web/**"] }
+      ],
       "commands": [
         "npm install --include=dev --include=optional --legacy-peer-deps"
       ]
@@ -20,6 +23,9 @@
     }
   },
   "deploy": {
+    "inputs": [
+      { "step": "build" }
+    ],
     "startCommand": "cd web && NODE_ENV=production node server.js"
   }
 }
