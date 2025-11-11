@@ -4,8 +4,8 @@
   "packages": {
     "node": "20"
   },
-  "env": {
-    "NPM_CONFIG_INCLUDE": "dev optional"
+  "build": {
+    "command": "npm install --include=dev --include=optional && npm run build"
   },
   "deploy": {
     "startCommand": "cd web && NODE_ENV=production node server.js"
