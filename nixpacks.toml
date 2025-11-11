@@ -1,10 +1,9 @@
 [phases.setup]
-nixPkgs = ["nodejs_20"]
+nixPkgs = ["nodejs-22_x"]
 
 [phases.install]
 cmds = [
-  "npm install --include=dev",
-  "npm install --workspace=web --include=dev"
+  "npm ci --include=optional"
 ]
 
 [phases.build]
