@@ -8,28 +8,17 @@
     "npm-cache": {
       "directory": "/root/.npm",
       "type": "shared"
-    },
-    "node-modules": {
-      "directory": "/app/node_modules",
-      "type": "shared"
     }
   },
   "steps": {
     "install": {
       "commands": [
-        "npm install --include=dev"
+        "npm install --include=dev --include=optional"
       ],
-      "caches": ["npm-cache", "node-modules"]
-    },
-    "install-web": {
-      "inputs": [{ "step": "install" }],
-      "commands": [
-        "npm install --workspace=web --include=dev"
-      ],
-      "caches": ["npm-cache", "node-modules"]
+      "caches": ["npm-cache"]
     },
     "build": {
-      "inputs": [{ "step": "install-web" }],
+      "inputs": [{ "step": "install" }],
       "commands": [
         "npm run build"
       ]
