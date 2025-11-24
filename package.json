@@ -42,9 +42,9 @@
     "bottleneck": "^2.19.5",
     "commander": "^14.0.2",
     "ejs": "^3.1.10",
-    "got": "^14.6.4",
+    "got": "^14.6.5",
     "hpagent": "^1.2.0",
-    "properties-file": "^3.6.2",
+    "properties-file": "^3.6.3",
     "proxy-from-env": "^1.1.0",
     "quick-lru": "^7.3.0",
     "safe-regex": "^2.1.1",
@@ -60,7 +60,7 @@
     "sinon": "^21.0.0"
   },
   "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "^4.24.0"
+    "@rollup/rollup-linux-x64-gnu": "^4.53.3"
   },
   "publishConfig": {
     "access": "public"
