@@ -1,8 +1,8 @@
-# SonarHawk Deployment Guide
+# CodeGuard Deployment Guide
 
 ## Railway Deployment
 
-SonarHawk is configured for easy deployment on Railway.
+CodeGuard is configured for easy deployment on Railway.
 
 ### Quick Deploy
 
@@ -109,7 +109,7 @@ The web interface supports all CLI options:
 ## Architecture
 
 ```
-SonarHawk/
+CodeGuard/
 ├── index.js              # Core SonarQube client & report generation
 ├── cli.js                # CLI entry point
 ├── web/

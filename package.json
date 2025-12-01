@@ -1,13 +1,13 @@
 {
-  "name": "sonarhawk",
+  "name": "codeguard",
   "version": "1.1.2",
   "description": "SonarQube reporting tool with enhanced features and dark mode",
-  "main": "index.js",
+  "main": "src/index.js",
   "author": "SnickerSec",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/snickersec/sonarhawk.git"
+    "url": "https://github.com/snickersec/codeguard.git"
   },
   "keywords": [
     "sonar",
@@ -18,9 +18,9 @@
     "vulnerability"
   ],
   "bin": {
-    "sonarhawk": "cli.js"
+    "codeguard": "src/cli.js"
   },
-  "exports": "./index.js",
+  "exports": "./src/index.js",
   "scripts": {
     "build": "npm run build --workspace=web",
     "test": "mocha test/**/*.test.js",
@@ -28,8 +28,8 @@
     "test:coverage": "nyc --reporter=html --reporter=text mocha test/**/*.test.js",
     "test:coverage:ci": "nyc --no-check-coverage --reporter=html --reporter=text --reporter=lcov mocha test/**/*.test.js",
     "test:lcov": "nyc --reporter=lcov mocha test/**/*.test.js",
-    "version": "npm run changelog && git add CHANGELOG.md",
-    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s"
+    "version": "npm run changelog && git add docs/CHANGELOG.md",
+    "changelog": "conventional-changelog -p angular -i docs/CHANGELOG.md -s"
   },
   "type": "module",
   "private": true,

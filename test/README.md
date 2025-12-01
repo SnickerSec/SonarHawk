@@ -1,6 +1,6 @@
-# SonarHawk Test Suite
+# CodeGuard Test Suite
 
-This directory contains comprehensive tests for the SonarHawk project.
+This directory contains comprehensive tests for the CodeGuard project.
 
 ## Test Structure
 

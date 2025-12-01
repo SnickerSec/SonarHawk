@@ -7,13 +7,13 @@ import { existsSync, unlinkSync } from 'fs';
 import { readFile } from 'fs/promises';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const indexPath = join(__dirname, '..', 'index.js');
+const indexPath = join(__dirname, '..', 'src', 'index.js');
 
 let generateReport;
 
 describe('Integration Tests', () => {
   const baseURL = 'https://sonar.example.com';
-  const outputPath = '/tmp/sonarhawk-test-report.html';
+  const outputPath = '/tmp/codeguard-test-report.html';
 
   before(async () => {
     const module = await import(indexPath);

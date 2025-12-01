@@ -1,7 +1,7 @@
 ## Installation
 
 ```bash
-npm install -g sonarhawk@${version}
+npm install -g codeguard@${version}
 ```
 
 ## What's Changed
@@ -10,8 +10,8 @@ ${changelog}
 
 ## Documentation
 
-Full documentation is available at: https://github.com/SnickerSec/sonarhawk#readme
+Full documentation is available at: https://github.com/SnickerSec/codeguard#readme
 
 ## Support
 
-If you encounter any issues, please file them at: https://github.com/SnickerSec/sonarhawk/issues
+If you encounter any issues, please file them at: https://github.com/SnickerSec/codeguard/issues

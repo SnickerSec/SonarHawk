@@ -1,12 +1,12 @@
-# 📊 SonarHawk
+# 📊 CodeGuard
 
 > Modern vulnerability reporting for SonarQube with enhanced features and dark mode support.
 
-![Version](https://img.shields.io/github/v/release/SnickerSec/sonarhawk)
-![License](https://img.shields.io/github/license/SnickerSec/sonarhawk)
+![Version](https://img.shields.io/github/v/release/SnickerSec/codeguard)
+![License](https://img.shields.io/github/license/SnickerSec/codeguard)
 
 <p align="center">
-  <img src="screenshots/dark_theme.png" alt="SonarHawk Report Example" width="800"/>
+  <img src="screenshots/dark_theme.png" alt="CodeGuard Report Example" width="800"/>
 </p>
 
 ## ✨ Highlights
@@ -36,8 +36,8 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/snickersec/sonarhawk.git
-cd sonarhawk
+git clone https://github.com/snickersec/codeguard.git
+cd codeguard
 
 # Install dependencies
 npm install

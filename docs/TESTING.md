@@ -1,6 +1,6 @@
-# Testing Guide for SonarHawk
+# Testing Guide for CodeGuard
 
-This document provides a comprehensive guide to testing SonarHawk.
+This document provides a comprehensive guide to testing CodeGuard.
 
 ## Table of Contents
 
@@ -147,7 +147,7 @@ describe('Feature Name', () => {
 
 ### Mocking HTTP Requests
 
-SonarHawk tests use [nock](https://github.com/nock/nock) to mock HTTP requests:
+CodeGuard tests use [nock](https://github.com/nock/nock) to mock HTTP requests:
 
 ```javascript
 import nock from 'nock';

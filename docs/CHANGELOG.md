@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- Rebranded from SonarHawk to CodeGuard
+
 ## [1.1.2] - 2025-03-28
 
 ### Fixed
@@ -54,7 +60,7 @@
 
 ### Added
 
-- Initial release of SonarHawk
+- Initial release of CodeGuard (formerly SonarHawk)
 - Support for SonarQube up to version 10.x
 - Modern UI with light and dark themes
 - PDF export functionality
