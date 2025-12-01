@@ -62,6 +62,9 @@
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "^4.53.3"
   },
+  "overrides": {
+    "@conventional-changelog/git-client": "^2.0.0"
+  },
   "publishConfig": {
     "access": "public"
   },
