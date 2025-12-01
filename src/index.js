@@ -140,7 +140,12 @@ class SonarClient {
     }
 
     this.debugLog = this.options.debug ? console.debug : () => {};
-    this.baseURL = this.options.sonarUrl.replace(/\/+$/, '');
+    // Remove trailing slashes using a safe string method to avoid ReDoS
+    let url = this.options.sonarUrl;
+    while (url.endsWith('/')) {
+      url = url.slice(0, -1);
+    }
+    this.baseURL = url;
     this.token = this.options.sonarToken;
     this.username = this.options.sonarUsername;
     this.password = this.options.sonarPassword;

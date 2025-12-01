@@ -81,7 +81,30 @@ app.post('/api/test-connection', async (req, res) => {
 
     // Test connection using got HTTP client directly
     const { default: got } = await import('got');
-    const testUrl = req.body.sonarurl.replace(/\/+$/, '');
+    // Remove trailing slashes using a safe string method to avoid ReDoS
+    let testUrl = req.body.sonarurl;
+    while (testUrl.endsWith('/')) {
+      testUrl = testUrl.slice(0, -1);
+    }
+
+    // Validate URL to prevent SSRF attacks
+    let parsedUrl;
+    try {
+      parsedUrl = new URL(testUrl);
+    } catch (error) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid URL format'
+      });
+    }
+
+    // Only allow http and https protocols
+    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+      return res.status(400).json({
+        success: false,
+        error: 'Only HTTP and HTTPS protocols are allowed'
+      });
+    }
 
     const headers = {};
     if (req.body.sonartoken) {
@@ -185,6 +208,25 @@ app.post('/api/generate', generateLimiter, async (req, res) => {
 
     // Create temporary file path for report
     const tempOutput = resolve(projectRoot, `temp-report-${Date.now()}.html`);
+
+    // Validate URL to prevent SSRF attacks
+    if (req.body.sonarurl) {
+      let parsedUrl;
+      try {
+        parsedUrl = new URL(req.body.sonarurl);
+      } catch (error) {
+        return res.status(400).json({
+          error: 'Invalid URL format'
+        });
+      }
+
+      // Only allow http and https protocols
+      if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+        return res.status(400).json({
+          error: 'Only HTTP and HTTPS protocols are allowed'
+        });
+      }
+    }
 
     // Transform form data to match CLI option names
     const options = {
