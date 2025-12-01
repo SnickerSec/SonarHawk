@@ -688,16 +688,21 @@ const generateReport = async (options) => {
       coverage,
       deltaAnalysis: newCodePeriod ? "Yes" : "No",
       summary: {
-        high: allIssues.filter(issue => 
+        high: allIssues.filter(issue =>
           issue.severity === "HIGH" || issue.severity === "BLOCKER"
         ).length,
-        medium: allIssues.filter(issue => 
+        medium: allIssues.filter(issue =>
           issue.severity === "MEDIUM"
         ).length,
-        low: allIssues.filter(issue => 
+        low: allIssues.filter(issue =>
           issue.severity === "LOW"
         ).length
-      }
+      },
+      // Add missing template variables to prevent errors
+      trendAnalysis: null,
+      dashboard: {},
+      includeCompliance: false,
+      compliance: null
     };
 
     // Generate reports
