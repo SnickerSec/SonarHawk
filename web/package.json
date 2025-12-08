@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@chakra-ui/react": "^2.10.7",
+    "@chakra-ui/react": "^3.30.0",
     "@chakra-ui/hooks": "^2.2.1",
     "@chakra-ui/system": "^2.6.2",
     "@chakra-ui/utils": "^2.0.15",
@@ -25,9 +25,9 @@
     "properties-file": "^3.6.3",
     "proxy-from-env": "^1.1.0",
     "quick-lru": "^7.3.0",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "react-hook-form": "^7.67.0",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
+    "react-hook-form": "^7.68.0",
     "react-icons": "^5.0.1",
     "safe-regex": "^2.1.1",
     "semver": "^7.7.3"
