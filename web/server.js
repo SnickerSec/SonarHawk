@@ -4,6 +4,125 @@ import rateLimit from 'express-rate-limit';
 import { dirname, resolve, join } from 'path';
 import { fileURLToPath } from 'url';
 import { readFile, unlink } from 'fs/promises';
+import dns from 'dns/promises';
+
+/**
+ * SSRF Protection: Validates that a URL does not point to internal/private networks
+ * @param {string} urlString - The URL to validate
+ * @returns {Promise<{valid: boolean, error?: string}>}
+ */
+async function validateUrlNotInternal(urlString) {
+  let parsedUrl;
+  try {
+    parsedUrl = new URL(urlString);
+  } catch {
+    return { valid: false, error: 'Invalid URL format' };
+  }
+
+  // Only allow http and https protocols
+  if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+    return { valid: false, error: 'Only HTTP and HTTPS protocols are allowed' };
+  }
+
+  const hostname = parsedUrl.hostname;
+
+  // Block localhost and common internal hostnames
+  const blockedHostnames = [
+    'localhost',
+    'localhost.localdomain',
+    'ip6-localhost',
+    'ip6-loopback'
+  ];
+
+  if (blockedHostnames.includes(hostname.toLowerCase())) {
+    return { valid: false, error: 'Requests to localhost are not allowed' };
+  }
+
+  // Check if hostname is an IP address
+  const ipv4Regex = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
+  const ipv4Match = hostname.match(ipv4Regex);
+
+  if (ipv4Match) {
+    const octets = ipv4Match.slice(1).map(Number);
+    if (isPrivateIPv4(octets)) {
+      return { valid: false, error: 'Requests to private IP addresses are not allowed' };
+    }
+  }
+
+  // For hostnames, resolve DNS and check if it points to private IP
+  if (!ipv4Match) {
+    try {
+      const addresses = await dns.resolve4(hostname);
+      for (const addr of addresses) {
+        const addrMatch = addr.match(ipv4Regex);
+        if (addrMatch) {
+          const octets = addrMatch.slice(1).map(Number);
+          if (isPrivateIPv4(octets)) {
+            return { valid: false, error: 'URL resolves to a private IP address' };
+          }
+        }
+      }
+    } catch {
+      // DNS resolution failed - allow the request to proceed and fail naturally
+      // This handles cases where the hostname doesn't resolve
+    }
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Check if an IPv4 address (as array of octets) is private/internal
+ */
+function isPrivateIPv4(octets) {
+  const [a, b, c, d] = octets;
+
+  // Validate octets are in range
+  if (octets.some(o => o < 0 || o > 255)) {
+    return true; // Invalid IP, treat as blocked
+  }
+
+  // 127.0.0.0/8 - Loopback
+  if (a === 127) return true;
+
+  // 10.0.0.0/8 - Private
+  if (a === 10) return true;
+
+  // 172.16.0.0/12 - Private
+  if (a === 172 && b >= 16 && b <= 31) return true;
+
+  // 192.168.0.0/16 - Private
+  if (a === 192 && b === 168) return true;
+
+  // 169.254.0.0/16 - Link-local (includes AWS metadata endpoint)
+  if (a === 169 && b === 254) return true;
+
+  // 0.0.0.0/8 - Current network
+  if (a === 0) return true;
+
+  // 100.64.0.0/10 - Shared Address Space (CGN)
+  if (a === 100 && b >= 64 && b <= 127) return true;
+
+  // 192.0.0.0/24 - IETF Protocol Assignments
+  if (a === 192 && b === 0 && c === 0) return true;
+
+  // 192.0.2.0/24 - Documentation (TEST-NET-1)
+  if (a === 192 && b === 0 && c === 2) return true;
+
+  // 198.51.100.0/24 - Documentation (TEST-NET-2)
+  if (a === 198 && b === 51 && c === 100) return true;
+
+  // 203.0.113.0/24 - Documentation (TEST-NET-3)
+  if (a === 203 && b === 0 && c === 113) return true;
+
+  // 224.0.0.0/4 - Multicast
+  if (a >= 224 && a <= 239) return true;
+
+  // 240.0.0.0/4 - Reserved
+  if (a >= 240) return true;
+
+  return false;
+}
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(__dirname, '..');
@@ -87,22 +206,12 @@ app.post('/api/test-connection', async (req, res) => {
       testUrl = testUrl.slice(0, -1);
     }
 
-    // Validate URL to prevent SSRF attacks
-    let parsedUrl;
-    try {
-      parsedUrl = new URL(testUrl);
-    } catch (error) {
+    // Validate URL to prevent SSRF attacks (checks protocol and blocks private IPs)
+    const urlValidation = await validateUrlNotInternal(testUrl);
+    if (!urlValidation.valid) {
       return res.status(400).json({
         success: false,
-        error: 'Invalid URL format'
-      });
-    }
-
-    // Only allow http and https protocols
-    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
-      return res.status(400).json({
-        success: false,
-        error: 'Only HTTP and HTTPS protocols are allowed'
+        error: urlValidation.error
       });
     }
 
@@ -209,21 +318,12 @@ app.post('/api/generate', generateLimiter, async (req, res) => {
     // Create temporary file path for report
     const tempOutput = resolve(projectRoot, `temp-report-${Date.now()}.html`);
 
-    // Validate URL to prevent SSRF attacks
+    // Validate URL to prevent SSRF attacks (checks protocol and blocks private IPs)
     if (req.body.sonarurl) {
-      let parsedUrl;
-      try {
-        parsedUrl = new URL(req.body.sonarurl);
-      } catch (error) {
+      const urlValidation = await validateUrlNotInternal(req.body.sonarurl);
+      if (!urlValidation.valid) {
         return res.status(400).json({
-          error: 'Invalid URL format'
-        });
-      }
-
-      // Only allow http and https protocols
-      if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
-        return res.status(400).json({
-          error: 'Only HTTP and HTTPS protocols are allowed'
+          error: urlValidation.error
         });
       }
     }
