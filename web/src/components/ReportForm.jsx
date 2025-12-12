@@ -1,33 +1,27 @@
 import {
   Box,
   Button,
-  FormControl,
-  FormLabel,
   Input,
   Switch,
   VStack,
   Accordion,
-  AccordionItem,
-  AccordionButton,
-  AccordionPanel,
-  AccordionIcon,
   Heading,
   Textarea,
-  Select,
   HStack,
   Text,
-  Divider,
   Progress,
   Alert,
-  AlertIcon,
-  AlertDescription,
-  FormErrorMessage,
   Spinner,
   Badge,
-  useToast
+  Field,
 } from '@chakra-ui/react'
+import { toaster } from './ui/toaster'
 import { useForm } from 'react-hook-form'
 import { useState } from 'react'
+
+// Chakra v3 compatibility aliases
+const FormControl = Field.Root;
+const FormLabel = Field.Label;
 
 export function ReportForm() {
   const { register, handleSubmit, watch, formState: { errors } } = useForm({
@@ -35,7 +29,6 @@ export function ReportForm() {
       darkTheme: true
     }
   })
-  const toast = useToast()
   const [isGenerating, setIsGenerating] = useState(false)
   const [isTesting, setIsTesting] = useState(false)
   const [connectionStatus, setConnectionStatus] = useState(null)
@@ -47,20 +40,20 @@ export function ReportForm() {
 
     // Validate required fields
     if (!formData.sonarurl) {
-      toast({
+      toaster.create({
         title: 'Missing URL',
         description: 'Please enter a SonarQube URL',
-        status: 'warning',
+        type: 'warning',
         duration: 3000
       })
       return
     }
 
     if (!formData.sonarcomponent) {
-      toast({
+      toaster.create({
         title: 'Missing Project Key',
         description: 'Please enter a project key/component',
-        status: 'warning',
+        type: 'warning',
         duration: 3000
       })
       return
@@ -90,30 +83,28 @@ export function ReportForm() {
 
       if (result.success) {
         setConnectionStatus({ success: true, message: result.message, server: result.server })
-        toast({
+        toaster.create({
           title: 'Connection Successful',
           description: `Connected to SonarQube ${result.server.version}`,
-          status: 'success',
+          type: 'success',
           duration: 5000
         })
       } else {
         setConnectionStatus({ success: false, message: result.error })
-        toast({
+        toaster.create({
           title: 'Connection Failed',
           description: result.error,
-          status: 'error',
-          duration: 5000,
-          isClosable: true
+          type: 'error',
+          duration: 5000
         })
       }
     } catch (error) {
       setConnectionStatus({ success: false, message: error.message })
-      toast({
+      toaster.create({
         title: 'Connection Error',
         description: 'Failed to test connection. Please check your settings.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true
+        type: 'error',
+        duration: 5000
       })
     } finally {
       setIsTesting(false)
@@ -167,20 +158,19 @@ export function ReportForm() {
       a.download = 'codeguard-report.html'
       a.click()
 
-      toast({
+      toaster.create({
         title: 'Report Generated',
         description: 'Your report has been downloaded successfully',
-        status: 'success',
+        type: 'success',
         duration: 3000
       })
     } catch (error) {
       console.error('Generation error:', error)
-      toast({
+      toaster.create({
         title: 'Error',
         description: error.message,
-        status: 'error',
-        duration: 5000,
-        isClosable: true
+        type: 'error',
+        duration: 5000
       })
     } finally {
       setIsGenerating(false)

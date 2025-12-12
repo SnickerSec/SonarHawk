@@ -5,11 +5,9 @@ import {
   Text,
   Badge,
   IconButton,
-  Tooltip,
-  Divider,
   Heading,
-  useColorModeValue
 } from '@chakra-ui/react'
+import { useColorModeValue } from './ui/color-mode'
 import { FaTrash, FaClock } from 'react-icons/fa'
 import { useState, useEffect } from 'react'
 

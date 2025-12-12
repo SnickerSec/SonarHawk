@@ -61,6 +61,125 @@ CREATE INDEX IF NOT EXISTS idx_job_executions_schedule ON job_executions(schedul
 CREATE INDEX IF NOT EXISTS idx_job_executions_status ON job_executions(status);
 CREATE INDEX IF NOT EXISTS idx_job_executions_started ON job_executions(started_at);
 
+-- ============================================
+-- Dashboard Tables for Findings Tracking
+-- ============================================
+
+-- Projects table: stores tracked SonarQube projects
+CREATE TABLE IF NOT EXISTS projects (
+  id SERIAL PRIMARY KEY,
+  sonar_url VARCHAR(500) NOT NULL,
+  sonar_component VARCHAR(255) NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  sonar_token VARCHAR(500),
+  sonar_organization VARCHAR(255),
+  branch VARCHAR(255) DEFAULT 'main',
+  last_sync_at TIMESTAMP,
+  sync_enabled BOOLEAN DEFAULT true,
+  sync_interval_minutes INTEGER DEFAULT 60,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(sonar_url, sonar_component, branch)
+);
+
+-- Scans table: tracks each sync/scan from SonarQube
+CREATE TABLE IF NOT EXISTS scans (
+  id SERIAL PRIMARY KEY,
+  project_id INTEGER REFERENCES projects(id) ON DELETE CASCADE,
+  scan_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  total_issues INTEGER DEFAULT 0,
+  blocker_count INTEGER DEFAULT 0,
+  critical_count INTEGER DEFAULT 0,
+  major_count INTEGER DEFAULT 0,
+  minor_count INTEGER DEFAULT 0,
+  info_count INTEGER DEFAULT 0,
+  hotspot_count INTEGER DEFAULT 0,
+  quality_gate_status VARCHAR(50),
+  coverage DECIMAL(5,2),
+  raw_data JSONB,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Findings table: stores individual issues/hotspots
+CREATE TABLE IF NOT EXISTS findings (
+  id SERIAL PRIMARY KEY,
+  project_id INTEGER REFERENCES projects(id) ON DELETE CASCADE,
+  sonar_key VARCHAR(255) NOT NULL,
+  rule_key VARCHAR(255) NOT NULL,
+  rule_name VARCHAR(500),
+  severity VARCHAR(50) NOT NULL, -- 'BLOCKER', 'CRITICAL', 'MAJOR', 'MINOR', 'INFO'
+  type VARCHAR(50) NOT NULL, -- 'VULNERABILITY', 'BUG', 'CODE_SMELL', 'SECURITY_HOTSPOT'
+  status VARCHAR(50) NOT NULL, -- 'OPEN', 'CONFIRMED', 'REOPENED', 'RESOLVED', 'CLOSED'
+  resolution VARCHAR(50), -- 'FIXED', 'FALSE-POSITIVE', 'WONTFIX', 'REMOVED'
+  component VARCHAR(500) NOT NULL,
+  line INTEGER,
+  message TEXT NOT NULL,
+  description TEXT,
+  sonar_link TEXT,
+  effort VARCHAR(50),
+  debt VARCHAR(50),
+  tags TEXT[],
+  first_seen_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  last_seen_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  resolved_at TIMESTAMP,
+  -- Local tracking fields (user can manage these)
+  local_status VARCHAR(50) DEFAULT 'new', -- 'new', 'acknowledged', 'in_progress', 'resolved', 'false_positive', 'wontfix'
+  assigned_to VARCHAR(255),
+  priority INTEGER DEFAULT 0, -- 0=none, 1=low, 2=medium, 3=high, 4=critical
+  due_date DATE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(project_id, sonar_key)
+);
+
+-- Finding comments table
+CREATE TABLE IF NOT EXISTS finding_comments (
+  id SERIAL PRIMARY KEY,
+  finding_id INTEGER REFERENCES findings(id) ON DELETE CASCADE,
+  author VARCHAR(255) NOT NULL,
+  content TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Finding history/audit log
+CREATE TABLE IF NOT EXISTS finding_history (
+  id SERIAL PRIMARY KEY,
+  finding_id INTEGER REFERENCES findings(id) ON DELETE CASCADE,
+  action VARCHAR(50) NOT NULL, -- 'status_change', 'assignment', 'comment_added', 'priority_change', 'created', 'synced'
+  field_name VARCHAR(100),
+  old_value TEXT,
+  new_value TEXT,
+  performed_by VARCHAR(255),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Dashboard users table for assignments
+CREATE TABLE IF NOT EXISTS dashboard_users (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  name VARCHAR(255) NOT NULL,
+  role VARCHAR(50) DEFAULT 'user', -- 'admin', 'user', 'viewer'
+  avatar_url VARCHAR(500),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Dashboard indexes for performance
+CREATE INDEX IF NOT EXISTS idx_projects_sync_enabled ON projects(sync_enabled);
+CREATE INDEX IF NOT EXISTS idx_scans_project_date ON scans(project_id, scan_date DESC);
+CREATE INDEX IF NOT EXISTS idx_findings_project ON findings(project_id);
+CREATE INDEX IF NOT EXISTS idx_findings_severity ON findings(severity);
+CREATE INDEX IF NOT EXISTS idx_findings_status ON findings(status);
+CREATE INDEX IF NOT EXISTS idx_findings_local_status ON findings(local_status);
+CREATE INDEX IF NOT EXISTS idx_findings_assigned ON findings(assigned_to);
+CREATE INDEX IF NOT EXISTS idx_findings_rule ON findings(rule_key);
+CREATE INDEX IF NOT EXISTS idx_findings_type ON findings(type);
+CREATE INDEX IF NOT EXISTS idx_findings_first_seen ON findings(first_seen_at);
+CREATE INDEX IF NOT EXISTS idx_finding_comments_finding ON finding_comments(finding_id);
+CREATE INDEX IF NOT EXISTS idx_finding_history_finding ON finding_history(finding_id);
+
 -- Insert default email template
 INSERT INTO email_templates (name, subject, html_body, text_body, is_default)
 VALUES (

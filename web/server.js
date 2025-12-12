@@ -131,6 +131,9 @@ const projectRoot = resolve(__dirname, '..');
 const indexModule = await import('../src/index.js');
 const { generateReport } = indexModule;
 
+// Import dashboard routes
+import dashboardRouter from './routes/dashboard.js';
+
 const app = express();
 const port = process.env.PORT || 3000;
 const isDev = process.env.NODE_ENV !== 'production';
@@ -166,6 +169,9 @@ app.use(express.json({ limit: '10mb' }));
 
 // Apply rate limiting to all API routes
 app.use('/api/', apiLimiter);
+
+// Mount dashboard routes
+app.use('/api/dashboard', dashboardRouter);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

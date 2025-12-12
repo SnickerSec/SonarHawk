@@ -1,14 +1,16 @@
-import { Box, Heading, Text, Icon } from '@chakra-ui/react'
-import { FaChartBar } from 'react-icons/fa'
+import { Box, Heading, Text, HStack, Icon } from '@chakra-ui/react';
+import { FiShield } from 'react-icons/fi';
 
 export function Header() {
   return (
     <Box textAlign="center">
-      <Icon as={FaChartBar} w={10} h={10} color="blue.500" mb={2} />
-      <Heading size="xl" mb={2}>CodeGuard</Heading>
+      <HStack justify="center" mb={2}>
+        <Icon as={FiShield} w={10} h={10} color="blue.500" />
+        <Heading size="xl">SonarHawk</Heading>
+      </HStack>
       <Text fontSize="lg" color="gray.500">
-        Generate enhanced SonarQube vulnerability reports
+        Track, analyze, and manage SonarQube security findings
       </Text>
     </Box>
-  )
+  );
 }
