@@ -13,16 +13,12 @@ import {
   Alert,
   Spinner,
   Badge,
-  Field,
   Separator,
 } from '@chakra-ui/react'
 import { toaster } from './ui/toaster'
+import { FormControl, FormLabel, FormErrorMessage } from './ui/field'
 import { useForm } from 'react-hook-form'
 import { useState } from 'react'
-
-// Chakra v3 compatibility aliases
-const FormControl = Field.Root;
-const FormLabel = Field.Label;
 
 export function ReportForm() {
   const { register, handleSubmit, watch, formState: { errors } } = useForm({
@@ -240,19 +236,19 @@ export function ReportForm() {
 
             {/* Connection Status */}
             {connectionStatus && (
-              <Alert status={connectionStatus.success ? 'success' : 'error'} borderRadius="md">
-                <AlertIcon />
+              <Alert.Root status={connectionStatus.success ? 'success' : 'error'} borderRadius="md">
+                <Alert.Indicator />
                 <Box flex="1">
-                  <AlertDescription>
+                  <Alert.Description>
                     {connectionStatus.message}
                     {connectionStatus.server && (
                       <Text fontSize="xs" mt={1}>
                         SonarQube {connectionStatus.server.version} - {connectionStatus.server.status}
                       </Text>
                     )}
-                  </AlertDescription>
+                  </Alert.Description>
                 </Box>
-              </Alert>
+              </Alert.Root>
             )}
           </VStack>
         </Box>
