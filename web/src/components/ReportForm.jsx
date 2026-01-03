@@ -14,6 +14,7 @@ import {
   Spinner,
   Badge,
   Field,
+  Separator,
 } from '@chakra-ui/react'
 import { toaster } from './ui/toaster'
 import { useForm } from 'react-hook-form'
@@ -256,7 +257,7 @@ export function ReportForm() {
           </VStack>
         </Box>
 
-        <Divider />
+        <Separator />
 
         {/* Accordion for organized options */}
         <Accordion allowMultiple>

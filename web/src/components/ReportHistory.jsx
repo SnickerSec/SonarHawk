@@ -6,6 +6,7 @@ import {
   Badge,
   IconButton,
   Heading,
+  Separator,
 } from '@chakra-ui/react'
 import { useColorModeValue } from './ui/color-mode'
 import { FaTrash, FaClock } from 'react-icons/fa'
@@ -93,7 +94,7 @@ export function ReportHistory() {
         )}
       </HStack>
 
-      <Divider mb={4} />
+      <Separator mb={4} />
 
       <VStack spacing={3} align="stretch">
         {history.map((item) => (
