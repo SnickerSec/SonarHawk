@@ -260,19 +260,17 @@ export function ReportForm() {
         <Separator />
 
         {/* Accordion for organized options */}
-        <Accordion allowMultiple>
+        <Accordion.Root multiple>
 
           {/* Authentication */}
-          <AccordionItem>
-            <h2>
-              <AccordionButton>
-                <Box flex="1" textAlign="left">
-                  <Heading size="sm">Authentication</Heading>
-                </Box>
-                <AccordionIcon />
-              </AccordionButton>
-            </h2>
-            <AccordionPanel pb={4}>
+          <Accordion.Item value="auth">
+            <Accordion.ItemTrigger>
+              <Box flex="1" textAlign="left">
+                <Heading size="sm">Authentication</Heading>
+              </Box>
+              <Accordion.ItemIndicator />
+            </Accordion.ItemTrigger>
+            <Accordion.ItemContent pb={4}>
               <VStack spacing={4}>
                 <FormControl>
                   <FormLabel>Auth Token (Recommended)</FormLabel>
@@ -311,20 +309,18 @@ export function ReportForm() {
                   </Text>
                 </FormControl>
               </VStack>
-            </AccordionPanel>
-          </AccordionItem>
+            </Accordion.ItemContent>
+          </Accordion.Item>
 
           {/* Project Metadata */}
-          <AccordionItem>
-            <h2>
-              <AccordionButton>
-                <Box flex="1" textAlign="left">
-                  <Heading size="sm">Project Metadata</Heading>
-                </Box>
-                <AccordionIcon />
-              </AccordionButton>
-            </h2>
-            <AccordionPanel pb={4}>
+          <Accordion.Item value="metadata">
+            <Accordion.ItemTrigger>
+              <Box flex="1" textAlign="left">
+                <Heading size="sm">Project Metadata</Heading>
+              </Box>
+              <Accordion.ItemIndicator />
+            </Accordion.ItemTrigger>
+            <Accordion.ItemContent pb={4}>
               <VStack spacing={4}>
                 <FormControl>
                   <FormLabel>Project Name</FormLabel>
@@ -353,20 +349,18 @@ export function ReportForm() {
                   />
                 </FormControl>
               </VStack>
-            </AccordionPanel>
-          </AccordionItem>
+            </Accordion.ItemContent>
+          </Accordion.Item>
 
           {/* Scope & Filtering */}
-          <AccordionItem>
-            <h2>
-              <AccordionButton>
-                <Box flex="1" textAlign="left">
-                  <Heading size="sm">Scope & Filtering</Heading>
-                </Box>
-                <AccordionIcon />
-              </AccordionButton>
-            </h2>
-            <AccordionPanel pb={4}>
+          <Accordion.Item value="scope">
+            <Accordion.ItemTrigger>
+              <Box flex="1" textAlign="left">
+                <Heading size="sm">Scope & Filtering</Heading>
+              </Box>
+              <Accordion.ItemIndicator />
+            </Accordion.ItemTrigger>
+            <Accordion.ItemContent pb={4}>
               <VStack spacing={4}>
                 <FormControl>
                   <FormLabel>Branch</FormLabel>
@@ -421,20 +415,18 @@ export function ReportForm() {
                   Disable for SonarQube versions &lt; 7.3
                 </Text>
               </VStack>
-            </AccordionPanel>
-          </AccordionItem>
+            </Accordion.ItemContent>
+          </Accordion.Item>
 
           {/* Report Content */}
-          <AccordionItem>
-            <h2>
-              <AccordionButton>
-                <Box flex="1" textAlign="left">
-                  <Heading size="sm">Report Content</Heading>
-                </Box>
-                <AccordionIcon />
-              </AccordionButton>
-            </h2>
-            <AccordionPanel pb={4}>
+          <Accordion.Item value="content">
+            <Accordion.ItemTrigger>
+              <Box flex="1" textAlign="left">
+                <Heading size="sm">Report Content</Heading>
+              </Box>
+              <Accordion.ItemIndicator />
+            </Accordion.ItemTrigger>
+            <Accordion.ItemContent pb={4}>
               <VStack spacing={4}>
                 <FormControl display="flex" alignItems="center">
                   <FormLabel mb="0" flex="1">
@@ -481,20 +473,18 @@ export function ReportForm() {
                   Extract rules without type filtering
                 </Text>
               </VStack>
-            </AccordionPanel>
-          </AccordionItem>
+            </Accordion.ItemContent>
+          </Accordion.Item>
 
           {/* Appearance */}
-          <AccordionItem>
-            <h2>
-              <AccordionButton>
-                <Box flex="1" textAlign="left">
-                  <Heading size="sm">Appearance & Customization</Heading>
-                </Box>
-                <AccordionIcon />
-              </AccordionButton>
-            </h2>
-            <AccordionPanel pb={4}>
+          <Accordion.Item value="appearance">
+            <Accordion.ItemTrigger>
+              <Box flex="1" textAlign="left">
+                <Heading size="sm">Appearance & Customization</Heading>
+              </Box>
+              <Accordion.ItemIndicator />
+            </Accordion.ItemTrigger>
+            <Accordion.ItemContent pb={4}>
               <VStack spacing={4}>
                 <FormControl display="flex" alignItems="center">
                   <FormLabel mb="0" flex="1">
@@ -519,20 +509,18 @@ export function ReportForm() {
                   />
                 </FormControl>
               </VStack>
-            </AccordionPanel>
-          </AccordionItem>
+            </Accordion.ItemContent>
+          </Accordion.Item>
 
           {/* Advanced */}
-          <AccordionItem>
-            <h2>
-              <AccordionButton>
-                <Box flex="1" textAlign="left">
-                  <Heading size="sm">Advanced Options</Heading>
-                </Box>
-                <AccordionIcon />
-              </AccordionButton>
-            </h2>
-            <AccordionPanel pb={4}>
+          <Accordion.Item value="advanced">
+            <Accordion.ItemTrigger>
+              <Box flex="1" textAlign="left">
+                <Heading size="sm">Advanced Options</Heading>
+              </Box>
+              <Accordion.ItemIndicator />
+            </Accordion.ItemTrigger>
+            <Accordion.ItemContent pb={4}>
               <VStack spacing={4}>
                 <FormControl>
                   <FormLabel>HTTP Proxy</FormLabel>
@@ -553,10 +541,10 @@ export function ReportForm() {
                   Enable verbose logging (check browser console)
                 </Text>
               </VStack>
-            </AccordionPanel>
-          </AccordionItem>
+            </Accordion.ItemContent>
+          </Accordion.Item>
 
-        </Accordion>
+        </Accordion.Root>
 
         {/* Loading Progress */}
         {isGenerating && (
