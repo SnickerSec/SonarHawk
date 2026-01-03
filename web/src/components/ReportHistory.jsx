@@ -7,6 +7,7 @@ import {
   IconButton,
   Heading,
   Separator,
+  Tooltip,
 } from '@chakra-ui/react'
 import { useColorModeValue } from './ui/color-mode'
 import { FaTrash, FaClock } from 'react-icons/fa'
@@ -18,6 +19,7 @@ export function ReportHistory() {
   const [history, setHistory] = useState([])
   const bgColor = useColorModeValue('white', 'gray.800')
   const borderColor = useColorModeValue('gray.200', 'gray.700')
+  const hoverBg = useColorModeValue('gray.50', 'gray.700')
 
   useEffect(() => {
     loadHistory()
@@ -81,16 +83,22 @@ export function ReportHistory() {
           <Badge colorScheme="blue">{history.length}</Badge>
         </HStack>
         {history.length > 0 && (
-          <Tooltip label="Clear all history">
-            <IconButton
-              aria-label="Clear history"
-              icon={<FaTrash />}
-              size="sm"
-              variant="ghost"
-              colorScheme="red"
-              onClick={clearHistory}
-            />
-          </Tooltip>
+          <Tooltip.Root>
+            <Tooltip.Trigger asChild>
+              <IconButton
+                aria-label="Clear history"
+                size="sm"
+                variant="ghost"
+                colorScheme="red"
+                onClick={clearHistory}
+              >
+                <FaTrash />
+              </IconButton>
+            </Tooltip.Trigger>
+            <Tooltip.Positioner>
+              <Tooltip.Content>Clear all history</Tooltip.Content>
+            </Tooltip.Positioner>
+          </Tooltip.Root>
         )}
       </HStack>
 
@@ -105,7 +113,7 @@ export function ReportHistory() {
             borderWidth="1px"
             borderColor={borderColor}
             borderRadius="md"
-            _hover={{ bg: useColorModeValue('gray.50', 'gray.700') }}
+            _hover={{ bg: hoverBg }}
           >
             <VStack align="start" spacing={1} flex="1">
               <HStack spacing={2}>
@@ -127,16 +135,22 @@ export function ReportHistory() {
                 {item.url} • {formatDate(item.timestamp)}
               </Text>
             </VStack>
-            <Tooltip label="Remove from history">
-              <IconButton
-                aria-label="Remove"
-                icon={<FaTrash />}
-                size="xs"
-                variant="ghost"
-                colorScheme="red"
-                onClick={() => removeItem(item.timestamp)}
-              />
-            </Tooltip>
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
+                <IconButton
+                  aria-label="Remove"
+                  size="xs"
+                  variant="ghost"
+                  colorScheme="red"
+                  onClick={() => removeItem(item.timestamp)}
+                >
+                  <FaTrash />
+                </IconButton>
+              </Tooltip.Trigger>
+              <Tooltip.Positioner>
+                <Tooltip.Content>Remove from history</Tooltip.Content>
+              </Tooltip.Positioner>
+            </Tooltip.Root>
           </HStack>
         ))}
       </VStack>
