@@ -41,7 +41,7 @@
     "axios": "^1.13.2",
     "bottleneck": "^2.19.5",
     "commander": "^14.0.2",
-    "ejs": "^3.1.10",
+    "ejs": "^4.0.1",
     "got": "^14.6.5",
     "hpagent": "^1.2.0",
     "properties-file": "^3.6.3",
@@ -60,7 +60,7 @@
     "sinon": "^21.0.1"
   },
   "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "^4.55.1"
+    "@rollup/rollup-linux-x64-gnu": "^4.55.2"
   },
   "overrides": {
     "@conventional-changelog/git-client": "^2.0.0",
