@@ -38,13 +38,13 @@
   ],
   "dependencies": {
     "@octokit/rest": "^22.0.1",
-    "axios": "^1.13.3",
+    "axios": "^1.13.4",
     "bottleneck": "^2.19.5",
-    "commander": "^14.0.2",
+    "commander": "^14.0.3",
     "ejs": "^4.0.1",
     "got": "^14.6.5",
     "hpagent": "^1.2.0",
-    "properties-file": "^3.6.3",
+    "properties-file": "^3.6.4",
     "proxy-from-env": "^1.1.0",
     "quick-lru": "^7.3.0",
     "safe-regex": "^2.1.1",
@@ -60,7 +60,7 @@
     "sinon": "^21.0.1"
   },
   "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "^4.56.0"
+    "@rollup/rollup-linux-x64-gnu": "^4.57.1"
   },
   "overrides": {
     "@conventional-changelog/git-client": "^2.0.0",
