@@ -38,17 +38,17 @@
   ],
   "dependencies": {
     "@octokit/rest": "^22.0.1",
-    "axios": "^1.13.4",
+    "axios": "^1.13.5",
     "bottleneck": "^2.19.5",
     "commander": "^14.0.3",
     "ejs": "^4.0.1",
     "got": "^14.6.5",
     "hpagent": "^1.2.0",
     "properties-file": "^3.6.4",
-    "proxy-from-env": "^1.1.0",
+    "proxy-from-env": "^2.0.0",
     "quick-lru": "^7.3.0",
     "safe-regex": "^2.1.1",
-    "semver": "^7.7.3"
+    "semver": "^7.7.4"
   },
   "devDependencies": {
     "chai": "^6.2.2",
