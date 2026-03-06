@@ -15,7 +15,7 @@
     "cors": "^2.8.6",
     "ejs": "^4.0.1",
     "express": "^5.2.0",
-    "express-rate-limit": "^8.2.1",
+    "express-rate-limit": "^8.2.2",
     "framer-motion": "^12.34.4",
     "got": "^14.6.5",
     "hpagent": "^1.2.0",
