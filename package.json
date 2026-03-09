@@ -41,7 +41,7 @@
     "axios": "^1.13.6",
     "bottleneck": "^2.19.5",
     "commander": "^14.0.3",
-    "ejs": "^4.0.1",
+    "ejs": "^5.0.1",
     "got": "^14.6.5",
     "hpagent": "^1.2.0",
     "properties-file": "^3.6.4",
