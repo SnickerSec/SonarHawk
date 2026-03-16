@@ -44,8 +44,8 @@
     "ejs": "^5.0.1",
     "got": "^14.6.5",
     "hpagent": "^1.2.0",
-    "properties-file": "^3.6.4",
-    "proxy-from-env": "^2.0.0",
+    "properties-file": "^3.7.0",
+    "proxy-from-env": "^2.1.0",
     "quick-lru": "^7.3.0",
     "safe-regex": "^2.1.1",
     "semver": "^7.7.4"
