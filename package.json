@@ -44,7 +44,7 @@
     "ejs": "^5.0.1",
     "got": "^14.6.5",
     "hpagent": "^1.2.0",
-    "properties-file": "^3.7.0",
+    "properties-file": "^4.0.0",
     "proxy-from-env": "^2.1.0",
     "quick-lru": "^7.3.0",
     "safe-regex": "^2.1.1",
@@ -60,7 +60,7 @@
     "sinon": "^21.0.3"
   },
   "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "^4.59.0"
+    "@rollup/rollup-linux-x64-gnu": "^4.60.0"
   },
   "overrides": {
     "@conventional-changelog/git-client": "^2.0.0",
