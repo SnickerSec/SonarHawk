@@ -64,7 +64,7 @@
   },
   "overrides": {
     "@conventional-changelog/git-client": "^2.0.0",
-    "qs": "^6.15.1"
+    "qs": "^6.15.2"
   },
   "publishConfig": {
     "access": "public"
