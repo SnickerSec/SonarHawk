@@ -5,7 +5,7 @@
   "type": "module",
   "dependencies": {
     "@chakra-ui/hooks": "^2.2.1",
-    "@chakra-ui/react": "^3.35.0",
+    "@chakra-ui/react": "^3.36.0",
     "@chakra-ui/system": "^2.6.2",
     "@chakra-ui/utils": "^2.0.15",
     "@emotion/react": "^11.11.4",
@@ -21,18 +21,18 @@
     "hpagent": "^1.2.0",
     "next-themes": "^0.4.6",
     "node-cron": "^4.2.1",
-    "nodemailer": "^8.0.10",
+    "nodemailer": "^9.0.0",
     "pg": "^8.21.0",
     "properties-file": "^5.0.5",
     "proxy-from-env": "^2.1.0",
     "quick-lru": "^7.3.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "react-hook-form": "^7.78.0",
+    "react-hook-form": "^7.79.0",
     "react-icons": "^5.6.0",
     "recharts": "^3.8.1",
     "safe-regex": "^2.1.1",
-    "semver": "^7.8.3"
+    "semver": "^7.8.4"
   },
   "scripts": {
     "dev": "vite",
