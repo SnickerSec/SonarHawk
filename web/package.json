@@ -21,7 +21,7 @@
     "hpagent": "^1.2.0",
     "next-themes": "^0.4.6",
     "node-cron": "^4.2.1",
-    "nodemailer": "^9.0.0",
+    "nodemailer": "^9.0.1",
     "pg": "^8.21.0",
     "properties-file": "^5.0.5",
     "proxy-from-env": "^2.1.0",
