@@ -42,13 +42,13 @@
     "bottleneck": "^2.19.5",
     "commander": "^15.0.0",
     "ejs": "^6.0.1",
-    "got": "^15.0.5",
+    "got": "^15.0.6",
     "hpagent": "^1.2.0",
     "properties-file": "^5.0.5",
     "proxy-from-env": "^2.1.0",
     "quick-lru": "^7.3.0",
     "safe-regex": "^2.1.1",
-    "semver": "^7.8.4"
+    "semver": "^7.8.5"
   },
   "devDependencies": {
     "chai": "^6.2.2",
@@ -60,7 +60,7 @@
     "sinon": "^22.0.0"
   },
   "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "^4.62.0"
+    "@rollup/rollup-linux-x64-gnu": "^4.62.2"
   },
   "overrides": {
     "@conventional-changelog/git-client": "^2.0.0",
