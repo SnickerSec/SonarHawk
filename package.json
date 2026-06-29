@@ -38,11 +38,11 @@
   ],
   "dependencies": {
     "@octokit/rest": "^22.0.1",
-    "axios": "^1.18.0",
+    "axios": "^1.18.1",
     "bottleneck": "^2.19.5",
     "commander": "^15.0.0",
     "ejs": "^6.0.1",
-    "got": "^15.0.6",
+    "got": "^15.0.7",
     "hpagent": "^1.2.0",
     "properties-file": "^5.0.5",
     "proxy-from-env": "^2.1.0",
