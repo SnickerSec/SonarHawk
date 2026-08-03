@@ -45,8 +45,8 @@
     "railway:start": "NODE_ENV=production node server.js"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^6.0.4",
+    "@vitejs/plugin-react": "^6.0.5",
     "concurrently": "^10.0.4",
-    "vite": "^8.1.5"
+    "vite": "^8.2.0"
   }
 }
