@@ -60,7 +60,7 @@
     "sinon": "^22.1.0"
   },
   "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "^4.63.1"
+    "@rollup/rollup-linux-x64-gnu": "^4.63.3"
   },
   "overrides": {
     "@conventional-changelog/git-client": "^2.0.0",
