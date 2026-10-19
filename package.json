@@ -42,7 +42,7 @@
     "bottleneck": "^2.19.5",
     "commander": "^15.0.0",
     "ejs": "^7.0.1",
-    "got": "^16.0.0",
+    "got": "^16.1.0",
     "hpagent": "^1.2.0",
     "properties-file": "^5.0.7",
     "proxy-from-env": "^2.1.0",
@@ -60,7 +60,7 @@
     "sinon": "^22.1.0"
   },
   "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "^4.64.5"
+    "@rollup/rollup-linux-x64-gnu": "^4.64.7"
   },
   "overrides": {
     "@conventional-changelog/git-client": "^2.0.0",
