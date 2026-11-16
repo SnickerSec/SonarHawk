@@ -38,9 +38,9 @@
   ],
   "dependencies": {
     "@octokit/rest": "^22.0.1",
-    "axios": "^1.21.0",
+    "axios": "^1.21.1",
     "bottleneck": "^2.19.5",
-    "commander": "^15.0.0",
+    "commander": "^15.1.0",
     "ejs": "^7.0.2",
     "got": "^16.2.0",
     "hpagent": "^1.2.0",
@@ -60,7 +60,7 @@
     "sinon": "^22.1.0"
   },
   "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "^4.68.0"
+    "@rollup/rollup-linux-x64-gnu": "^4.68.3"
   },
   "overrides": {
     "@conventional-changelog/git-client": "^2.0.0",
